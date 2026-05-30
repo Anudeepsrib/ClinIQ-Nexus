@@ -128,7 +128,7 @@ async def chat(req: ChatRequest, user=Depends(get_current_user)):
     requires_review = generation["requires_human_review"]
     review_task_id = None
     if requires_review:
-        review_task = create_review_task(
+        review_task = await create_review_task(
             task_type="ai_chat_safety_review",
             patient_id=req.patient_id or user.user_id,
             reason="AI response requires human review based on route, MCP, or model safety policy",

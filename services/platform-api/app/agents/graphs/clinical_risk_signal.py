@@ -88,11 +88,12 @@ async def generate_structured_output(state: RiskState) -> RiskState:
 
     if state["requires_human_review"]:
         for sig in state["signals"]:
-            task = create_review_task(
+            task = await create_review_task(
                 task_type="clinical_risk_signal_review",
                 patient_id=sig["patient_id"],
                 reason=f"{sig['type']}: {sig['description']}",
                 assigned_to="nurse",
+                tenant_id=state["user"].tenant_id,
             )
             state["review_task_ids"].append(task["id"])
 

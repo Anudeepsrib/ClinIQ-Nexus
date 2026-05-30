@@ -129,11 +129,12 @@ async def synthesize_summary(state: ChartSummaryState) -> ChartSummaryState:
 async def final_gate(state: ChartSummaryState) -> ChartSummaryState:
     """Step 4: Apply human review gate if needed."""
     if state["requires_human_review"] or state["unresolved_issues"]:
-        task = create_review_task(
+        task = await create_review_task(
             task_type="clinician_chart_summary_review",
             patient_id=state["patient_id"],
             reason="Chart summary generated with unresolved issues or risk signals",
             assigned_to="clinician",
+            tenant_id=state["user"].tenant_id,
         )
         state["review_task_id"] = task["id"]
         state["requires_human_review"] = True

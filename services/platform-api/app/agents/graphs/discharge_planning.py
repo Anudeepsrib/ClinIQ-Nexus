@@ -116,11 +116,12 @@ async def draft_summary(state: DischargeState) -> DischargeState:
 async def human_review_gate(state: DischargeState) -> DischargeState:
     """Step 4: Create human review task if needed (hard gate)."""
     if state["requires_human_review"]:
-        task = create_review_task(
+        task = await create_review_task(
             task_type="discharge_readiness_review",
             patient_id=state["patient_id"],
             reason=" | ".join(state["blockers"]),
             assigned_to="care_coordinator",
+            tenant_id=state["user"].tenant_id,
         )
         state["review_task_id"] = task["id"]
         state["final_output"] = (
