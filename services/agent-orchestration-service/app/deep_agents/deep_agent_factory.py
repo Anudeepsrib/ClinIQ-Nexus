@@ -108,7 +108,6 @@ class DeepAgentFactory:
         if role in ["clinician", "care_coordinator", "nurse"]:
             agent.register_tool(RetrieveGovernedMemoryTool(agent.context))
 
-        # Compliance Deep Agents get very narrow, audit-focused tools
-        if role == "compliance_officer" or route == "compliance_review":
-            # Only very limited tools for compliance
-            pass
+        # Compliance and operations agents get audit logging capability
+        if role == "compliance_officer" or route in ["compliance_review", "hospital_operations"]:
+            agent.register_tool(LogDeepAgentDecisionTool(agent.context))
