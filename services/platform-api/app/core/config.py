@@ -21,8 +21,10 @@ class Settings(BaseSettings):
     LOG_LEVEL: str = "INFO"
     USE_REAL_AWS: bool = False
 
-    # Database
+    # Database & Storage
     DATABASE_URL: str = "postgresql+asyncpg://cliniq:cliniq_dev_password@localhost:5432/cliniq_nexus"
+    OPENSEARCH_URL: str = "https://search-cliniq-nexus-dev-xxxxx.us-east-1.es.amazonaws.com"
+    S3_BUCKET_NAME: str = "cliniq-nexus-dev-documents"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
