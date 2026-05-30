@@ -3,8 +3,8 @@ import "./globals.css";
 import { QueryClientProvider } from "./providers";
 
 export const metadata: Metadata = {
-  title: "ClinIQ-Nexus | Clinical AI Platform",
-  description: "Safe, governed AI for hospitals. All clinical outputs require human review.",
+  title: "MediCore AI | Enterprise Clinical Intelligence Platform",
+  description: "HIPAA-conscious, multi-tenant clinical AI platform. All clinical outputs require licensed human review.",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {

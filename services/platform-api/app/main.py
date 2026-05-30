@@ -38,9 +38,28 @@ from app.api.v1 import router as api_v1_router
 from app.models.base import Base
 from app.db.session import engine, get_db
 
+try:
+    from opentelemetry import trace
+    from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+    from opentelemetry.sdk.trace import TracerProvider
+    from opentelemetry.sdk.trace.export import BatchSpanProcessor
+    from opentelemetry.exporter.otlp.proto.http.trace_exporter import OTLPSpanExporter
+    from opentelemetry.sdk.resources import Resource
+    OPENTELEMETRY_AVAILABLE = True
+except ImportError:
+    OPENTELEMETRY_AVAILABLE = False
+
 # Configure structured logging
 configure_logging()
 logger = structlog.get_logger(__name__)
+
+# Initialize OpenTelemetry Tracer if enabled in production mode
+if OPENTELEMETRY_AVAILABLE and settings.USE_REAL_AWS:
+    resource = Resource(attributes={"service.name": "platform-api", "environment": settings.ENVIRONMENT})
+    provider = TracerProvider(resource=resource)
+    processor = BatchSpanProcessor(OTLPSpanExporter())
+    provider.add_span_processor(processor)
+    trace.set_tracer_provider(provider)
 
 
 @asynccontextmanager
@@ -71,6 +90,10 @@ app = FastAPI(
     redoc_url="/redoc",
     lifespan=lifespan,
 )
+
+# Instrument FastAPI with OpenTelemetry
+if OPENTELEMETRY_AVAILABLE and settings.USE_REAL_AWS:
+    FastAPIInstrumentor.instrument_app(app, excluded_urls="health,ready")
 
 # Security headers + CORS (locked down for demo; tighten in prod)
 app.add_middleware(

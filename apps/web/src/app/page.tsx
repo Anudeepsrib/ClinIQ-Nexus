@@ -1,20 +1,12 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Stethoscope, User, Shield, AlertTriangle, Clock, CheckCircle, XCircle } from 'lucide-react';
-
-const DEMO_USERS = [
-  { email: 'patient@hospital-a.demo', label: 'Maria Gonzalez (Patient)', role: 'patient' },
-  { email: 'clinician@hospital-a.demo', label: 'Dr. Sarah Chen (Clinician)', role: 'clinician' },
-  { email: 'nurse@hospital-a.demo', label: 'James Rivera, RN (Nurse)', role: 'nurse' },
-  { email: 'care_coordinator@hospital-a.demo', label: 'Aisha Patel (Care Coordinator)', role: 'care_coordinator' },
-  { email: 'admin@hospital-a.demo', label: 'Robert Kim (Admin)', role: 'admin' },
-  { email: 'compliance@hospital-a.demo', label: 'Elena Vasquez (Compliance)', role: 'compliance_officer' },
-];
+import { Stethoscope, User, Shield, AlertTriangle, Clock, CheckCircle, XCircle, LogOut } from 'lucide-react';
+import { useAuth, DEMO_USERS } from './hooks/useAuth';
 
 const EXAMPLE_QUERIES: Record<string, string> = {
   patient: "Can you summarize my recent lab results in simple language?",
-  clinician: "Summarize this patient’s last 72 hours before rounds.",
+  clinician: "Summarize this patient's last 72 hours before rounds.",
   nurse: "Which patients on my floor may need follow-up based on overnight notes?",
   care_coordinator: "Create a discharge readiness summary for Maria Gonzalez.",
   admin: "What are the top reasons for delayed discharge this week?",
@@ -24,30 +16,37 @@ const EXAMPLE_QUERIES: Record<string, string> = {
 type Tab = 'chat' | 'reviews' | 'workflows';
 
 export default function ClinIQNexusDemo() {
+  const auth = useAuth();
   const [selectedUser, setSelectedUser] = useState(DEMO_USERS[1]);
   const [query, setQuery] = useState("");
   const [messages, setMessages] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
-  const [token, setToken] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState<Tab>('chat');
   const [reviews, setReviews] = useState<any[]>([]);
   const [workflowResult, setWorkflowResult] = useState<any>(null);
 
+  // Derive effective token and role from unified auth
+  const token = auth.token;
+  const effectiveRole = auth.isDemoMode ? selectedUser.role : auth.role;
+
   React.useEffect(() => {
-    const login = async () => {
-      const res = await fetch('http://localhost:8000/api/v1/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: selectedUser.email }),
-      });
-      const data = await res.json();
-      setToken(data.access_token);
-      setMessages([{ type: 'system', content: `Logged in as ${selectedUser.label}. Every response is governed by MCP.` }]);
-      setWorkflowResult(null);
-      loadReviews(data.access_token);
-    };
-    login();
-  }, [selectedUser]);
+    if (auth.isDemoMode) {
+      // Demo mode: switch user via local API
+      const login = async () => {
+        await auth.login(selectedUser.email);
+        setMessages([{ type: 'system', content: `Logged in as ${selectedUser.label}. Every response is governed by MCP.` }]);
+        setWorkflowResult(null);
+      };
+      login();
+    } else if (auth.isAuthenticated) {
+      // Production mode: session is active
+      setMessages([{ type: 'system', content: `Authenticated as ${auth.userName} (${auth.role}). Full governance active.` }]);
+    }
+  }, [selectedUser, auth.isAuthenticated]);
+
+  React.useEffect(() => {
+    if (token) loadReviews(token);
+  }, [token]);
 
   const loadReviews = async (tkn?: string) => {
     const useToken = tkn || token;
@@ -123,13 +122,20 @@ export default function ClinIQNexusDemo() {
         <div className="flex items-center gap-3">
           <Stethoscope className="w-6 h-6 text-[#0284c8]" />
           <div>
-            <div className="font-semibold text-xl tracking-tight">ClinIQ-Nexus</div>
-            <div className="text-[10px] text-slate-500 -mt-1">HIPAA-GRADE CLINICAL AI • REFERENCE IMPLEMENTATION</div>
+            <div className="font-semibold text-xl tracking-tight">MediCore AI</div>
+            <div className="text-[10px] text-slate-500 -mt-1">HIPAA-GRADE CLINICAL AI • ENTERPRISE PLATFORM</div>
           </div>
-          <div className="ml-4 px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 text-xs font-mono">LOCAL DEMO • FULL GOVERNANCE ACTIVE</div>
+          <div className={`ml-4 px-2 py-0.5 rounded text-xs font-mono ${auth.isDemoMode ? 'bg-emerald-950 text-emerald-400' : 'bg-cyan-950 text-cyan-400'}`}>
+            {auth.isDemoMode ? 'LOCAL DEMO' : 'AWS COGNITO'} • FULL GOVERNANCE ACTIVE
+          </div>
         </div>
-        <div className="flex items-center gap-2 text-sm text-slate-400">
-          <Shield className="w-4 h-4" /> MCP Governance • Intent Router • Human-in-the-Loop • Audit
+        <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 text-sm text-slate-400">
+            <Shield className="w-4 h-4" /> MCP Governance • Intent Router • Human-in-the-Loop • Audit
+          </div>
+          <button onClick={auth.logout} className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition px-2 py-1 rounded hover:bg-slate-800">
+            <LogOut className="w-3 h-3" /> Sign out
+          </button>
         </div>
       </div>
 
