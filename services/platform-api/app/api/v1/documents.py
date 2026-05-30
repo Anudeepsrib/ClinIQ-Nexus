@@ -6,7 +6,7 @@ from app.models.document import Document
 from sqlalchemy import select
 import uuid
 import structlog
-import time
+from pathlib import Path
 
 try:
     import boto3
@@ -30,11 +30,18 @@ async def upload_document(
     """
     Uploads a document to S3 (landing bucket) and creates an initial DB record.
     """
-    if not file.filename.endswith((".txt", ".pdf", ".json")):
+    safe_filename = Path(file.filename or "uploaded_document").name
+    if not safe_filename.lower().endswith((".txt", ".pdf", ".json")):
         raise HTTPException(400, "Unsupported file format. Only txt, pdf, json allowed.")
+
+    if patient_id and not user.can_access_patient(patient_id):
+        raise HTTPException(403, "Not authorized to upload documents for this patient")
+
+    if consent_scope not in set(user.consent_scopes):
+        raise HTTPException(403, "Consent scope is not authorized for this user")
         
     document_id = str(uuid.uuid4())
-    s3_key = f"tenant={user.tenant_id}/patient={patient_id or 'none'}/{document_id}_{file.filename}"
+    s3_key = f"tenant={user.tenant_id}/patient={patient_id or 'none'}/{document_id}_{safe_filename}"
     
     # 1. Malware Scan Hook (Conceptual)
     # In production, files upload to a quarantine bucket first, trigger EventBridge/Lambda
@@ -73,7 +80,7 @@ async def upload_document(
                 tenant_id=user.tenant_id,
                 patient_id=patient_id,
                 doc_type=doc_type,
-                title=file.filename,
+                title=safe_filename,
                 source_system="manual_upload",
                 sensitivity_level=sensitivity_level,
                 consent_scope=consent_scope,

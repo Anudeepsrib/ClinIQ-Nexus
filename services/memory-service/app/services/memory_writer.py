@@ -5,7 +5,7 @@ Memory Writer - Handles the final write of approved memories.
 from __future__ import annotations
 
 from typing import Any, Dict
-from datetime import datetime
+from datetime import datetime, timezone
 import uuid
 
 
@@ -44,7 +44,7 @@ class MemoryWriter:
             "memory_text_minimized": minimized_content,
             "sensitivity_level": sensitivity_level,
             "source_workflow_id": source_workflow_id,
-            "created_at": datetime.utcnow().isoformat(),
+            "created_at": datetime.now(timezone.utc).isoformat(),
             "is_active": True,
         }
 

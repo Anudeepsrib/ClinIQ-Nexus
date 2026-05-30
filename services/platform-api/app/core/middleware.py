@@ -60,7 +60,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
         auth_header = request.headers.get("Authorization", "")
         token = auth_header.replace("Bearer ", "") if auth_header.startswith("Bearer ") else None
 
-        if not token and settings.ENVIRONMENT == "development":
+        if not token and settings.ENVIRONMENT == "development" and not settings.USE_REAL_AWS:
             # Demo mode: allow X-Demo-User header for easy testing
             demo_user = request.headers.get("X-Demo-User", "clinician@hospital-a.demo")
             user_ctx = create_demo_user_context(demo_user)
@@ -89,6 +89,8 @@ class AuthMiddleware(BaseHTTPMiddleware):
                 tenant_id = payload.get("custom:tenant_id", settings.DEFAULT_TENANT_ID)
                 assigned_patients_str = payload.get("custom:assigned_patients", "")
                 assigned_patients = assigned_patients_str.split(",") if assigned_patients_str else []
+                consent_scopes_str = payload.get("custom:consent_scopes", "treatment")
+                consent_scopes = [scope.strip() for scope in consent_scopes_str.split(",") if scope.strip()]
                 
                 user_ctx = UserContext(
                     user_id=payload["sub"],
@@ -98,6 +100,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     full_name=payload.get("name", payload.get("given_name", "") + " " + payload.get("family_name", "")).strip(),
                     assigned_patient_ids=set(assigned_patients),
                     can_access_all_patients_in_tenant=role in {"clinician", "care_coordinator"},
+                    consent_scopes=consent_scopes or ["treatment"],
                 )
             else:
                 user_ctx = UserContext(
@@ -143,6 +146,34 @@ class TenantIsolationMiddleware(BaseHTTPMiddleware):
         return response
 
 
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    """Adds browser and transport security headers to every API response."""
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        response = await call_next(request)
+        response.headers.setdefault("X-Content-Type-Options", "nosniff")
+        response.headers.setdefault("X-Frame-Options", "DENY")
+        response.headers.setdefault("Referrer-Policy", "no-referrer")
+        response.headers.setdefault(
+            "Permissions-Policy",
+            "camera=(), microphone=(), geolocation=(), payment=()",
+        )
+        response.headers.setdefault("Cross-Origin-Resource-Policy", "same-site")
+
+        if request.url.path.startswith("/api/"):
+            response.headers.setdefault("Cache-Control", "no-store")
+
+        if settings.USE_REAL_AWS:
+            response.headers.setdefault(
+                "Strict-Transport-Security",
+                "max-age=31536000; includeSubDomains; preload",
+            )
+
+        return response
+
+
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Distributed rate limiting using Redis."""
 
@@ -162,11 +193,32 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
         elif "agent" in request.url.path or "workflow" in request.url.path:
             limit = settings.RATE_LIMIT_AGENTIC
 
-        allowed, remaining, reset = await check_rate_limit(
-            key=f"rate:{user.tenant_id}:{user.user_id}",
-            limit=limit,
-            window=60,
-        )
+        try:
+            allowed, remaining, reset = await check_rate_limit(
+                key=f"rate:{user.tenant_id}:{user.user_id}",
+                limit=limit,
+                window=60,
+            )
+        except Exception as exc:
+            logger.error(
+                "rate_limit_backend_unavailable",
+                tenant_id=user.tenant_id,
+                user_id=user.user_id,
+                role=user.role,
+                error=str(exc),
+            )
+            if settings.USE_REAL_AWS:
+                return JSONResponse(
+                    status_code=503,
+                    content={
+                        "error": "rate_limit_unavailable",
+                        "message": "Request governance is temporarily unavailable.",
+                    },
+                )
+
+            response = await call_next(request)
+            response.headers["X-RateLimit-Policy"] = "degraded-dev-open"
+            return response
 
         if not allowed:
             return JSONResponse(

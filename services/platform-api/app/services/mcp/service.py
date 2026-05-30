@@ -38,6 +38,18 @@ class MCPContextGovernanceService:
 
     def __init__(self):
         self.safety_threshold = settings.REQUIRE_HUMAN_REVIEW_CONFIDENCE_BELOW
+        self.prompt_injection_markers = {
+            "ignore previous instructions",
+            "ignore all previous",
+            "system prompt",
+            "developer message",
+            "reveal your prompt",
+            "print your instructions",
+            "bypass safety",
+            "disregard policy",
+            "do not follow",
+            "override clinical policy",
+        }
 
     async def govern(
         self,
@@ -67,7 +79,15 @@ class MCPContextGovernanceService:
                 decision.policy_decisions.append("tenant_mismatch_blocked")
                 continue
 
-            # 2. Patient scoping (minimum necessary)
+            # 2. Retrieval poisoning / prompt injection defense
+            if self._contains_prompt_injection(chunk.get("content", "")):
+                decision.blocked_context_count += 1
+                decision.policy_decisions.append("retrieval_prompt_injection_blocked")
+                decision.audit_tags.append("retrieval_poisoning_defense")
+                redacted.append({**chunk, "content": "[Blocked by MCP: prompt-injection pattern detected]"})
+                continue
+
+            # 3. Patient scoping (minimum necessary)
             chunk_patient = chunk.get("patient_id")
             allow_deidentified_admin_view = (
                 user.role in {"admin", "compliance_officer"}
@@ -78,19 +98,19 @@ class MCPContextGovernanceService:
                 decision.policy_decisions.append("patient_scope_violation")
                 continue
 
-            # 3. Sensitivity + consent
+            # 4. Sensitivity + consent
             sensitivity = chunk.get("sensitivity_level", "phi")
             consent_scope = chunk.get("consent_scope", "treatment")
 
-            if sensitivity == "phi" and "treatment" not in user.consent_scopes:
+            if sensitivity == "phi" and consent_scope not in user.consent_scopes:
                 decision.blocked_context_count += 1
                 decision.policy_decisions.append("consent_scope_violation")
                 continue
 
-            # 4. Role-based transformation / redaction
+            # 5. Role-based transformation / redaction
             transformed = self._transform_for_role(chunk, user.role, route)
 
-            # 5. High-risk content detection in patient-facing responses
+            # 6. High-risk content detection in patient-facing responses
             if user.role == "patient" and self._contains_abnormal_or_concerning(transformed["content"]):
                 decision.requires_human_review = True
                 decision.policy_decisions.append("abnormal_value_in_patient_facing_output")
@@ -134,3 +154,8 @@ class MCPContextGovernanceService:
         """Simple heuristic. In production this would be a trained signal detector."""
         concerning = ["critical", "abnormal", "panic", "high risk", "elevated", "positive for"]
         return any(word in text.lower() for word in concerning)
+
+    def _contains_prompt_injection(self, text: str) -> bool:
+        """Detect obvious prompt-injection patterns in retrieved context."""
+        lowered = " ".join(text.lower().split())
+        return any(marker in lowered for marker in self.prompt_injection_markers)

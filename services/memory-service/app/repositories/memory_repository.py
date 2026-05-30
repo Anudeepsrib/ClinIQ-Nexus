@@ -70,7 +70,9 @@ class MemoryRepository:
         if async_session is None:
             scoped = [
                 r for r in _IN_MEMORY_RECORDS
-                if r.get("tenant_id") == tenant_id and r.get("user_id") == user_id
+                if r.get("tenant_id") == tenant_id
+                and r.get("user_id") == user_id
+                and r.get("is_active", True)
             ]
             return scoped[-limit:]
 
@@ -78,9 +80,25 @@ class MemoryRepository:
             async with async_session() as session:
                 result = await session.execute(
                     text("""
-                    SELECT id, memory_type, COALESCE(memory_text_minimized, content) as content, source, created_at
+                    SELECT
+                        id,
+                        tenant_id,
+                        user_id,
+                        role,
+                        patient_id,
+                        encounter_id,
+                        memory_type,
+                        COALESCE(memory_text_minimized, content) AS memory_text_minimized,
+                        sensitivity_level,
+                        source_conversation_id,
+                        source_workflow_id,
+                        source,
+                        created_at,
+                        expires_at
                     FROM memory_records
                     WHERE tenant_id = :tenant AND user_id = :user
+                      AND COALESCE(is_active, true) = true
+                      AND (expires_at IS NULL OR expires_at > NOW())
                     ORDER BY created_at DESC
                     LIMIT :limit
                     """),
@@ -90,6 +108,8 @@ class MemoryRepository:
         except Exception:
             scoped = [
                 r for r in _IN_MEMORY_RECORDS
-                if r.get("tenant_id") == tenant_id and r.get("user_id") == user_id
+                if r.get("tenant_id") == tenant_id
+                and r.get("user_id") == user_id
+                and r.get("is_active", True)
             ]
             return scoped[-limit:]

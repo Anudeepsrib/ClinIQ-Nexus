@@ -67,3 +67,26 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+
+def validate_runtime_settings() -> list[str]:
+    """Return blocking configuration errors for non-development runtimes."""
+    errors: list[str] = []
+    production_like = settings.USE_REAL_AWS or settings.ENVIRONMENT in {"stage", "staging", "prod", "production"}
+
+    if not production_like:
+        return errors
+
+    if "*" in settings.CORS_ORIGINS:
+        errors.append("CORS_ORIGINS must not contain '*' in production-like environments")
+
+    if settings.USE_REAL_AWS:
+        if not settings.COGNITO_USER_POOL_ID:
+            errors.append("COGNITO_USER_POOL_ID is required when USE_REAL_AWS=true")
+        if not settings.COGNITO_APP_CLIENT_ID:
+            errors.append("COGNITO_APP_CLIENT_ID is required when USE_REAL_AWS=true")
+
+    if not settings.USE_REAL_AWS and settings.JWT_SECRET == "dev-jwt-secret-change-in-prod-please":
+        errors.append("JWT_SECRET must be changed outside local development")
+
+    return errors

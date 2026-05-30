@@ -53,11 +53,16 @@ class CognitoJWKSVerifier:
         self.jwks_url = f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.COGNITO_USER_POOL_ID}/.well-known/jwks.json"
         self.last_fetch = 0
 
+    def _validate_config(self) -> None:
+        if not settings.COGNITO_USER_POOL_ID:
+            raise ValueError("COGNITO_USER_POOL_ID is required when USE_REAL_AWS=true")
+        if not settings.COGNITO_APP_CLIENT_ID:
+            raise ValueError("COGNITO_APP_CLIENT_ID is required when USE_REAL_AWS=true")
+
     def get_jwks(self) -> Dict[str, Any]:
         # Cache for 1 hour to avoid frequent network calls
         if not self.jwks or time.time() - self.last_fetch > 3600:
-            if not settings.COGNITO_USER_POOL_ID:
-                raise ValueError("COGNITO_USER_POOL_ID is not configured")
+            self._validate_config()
             response = httpx.get(self.jwks_url, timeout=5.0)
             response.raise_for_status()
             self.jwks = response.json()
@@ -66,7 +71,14 @@ class CognitoJWKSVerifier:
 
     def verify(self, token: str) -> Dict[str, Any]:
         try:
+            self._validate_config()
             unverified_header = jwt.get_unverified_header(token)
+            unverified_claims = jwt.get_unverified_claims(token)
+            token_use = unverified_claims.get("token_use")
+
+            if token_use not in {"id", "access"}:
+                raise ValueError("Unsupported Cognito token_use")
+
             rsa_key = {}
             for key in self.get_jwks().get("keys", []):
                 if key["kid"] == unverified_header.get("kid"):
@@ -86,9 +98,15 @@ class CognitoJWKSVerifier:
                 token,
                 rsa_key,
                 algorithms=["RS256"],
-                audience=settings.COGNITO_APP_CLIENT_ID,
-                issuer=f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.COGNITO_USER_POOL_ID}"
+                issuer=f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.COGNITO_USER_POOL_ID}",
+                options={"verify_aud": False},
             )
+
+            if token_use == "id" and payload.get("aud") != settings.COGNITO_APP_CLIENT_ID:
+                raise ValueError("Invalid Cognito ID token audience")
+            if token_use == "access" and payload.get("client_id") != settings.COGNITO_APP_CLIENT_ID:
+                raise ValueError("Invalid Cognito access token client_id")
+
             return payload
         except Exception as e:
             logger.warning("cognito_jwt_verification_failed", error=str(e))

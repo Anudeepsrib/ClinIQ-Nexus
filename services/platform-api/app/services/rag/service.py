@@ -8,7 +8,7 @@ Production swaps to Amazon OpenSearch hybrid search with the same interface.
 from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
-from sqlalchemy import text
+from sqlalchemy import bindparam, text
 import json
 
 from app.db.session import async_session
@@ -25,6 +25,8 @@ except ImportError:
     OpenSearch = None
 
 logger = structlog.get_logger(__name__)
+
+RESTRICTED_SENSITIVITY_LEVELS = {"restricted", "psychotherapy_notes", "substance_use", "genetic"}
 
 def get_opensearch_client():
     if not OpenSearch or not boto3:
@@ -57,6 +59,7 @@ async def retrieve_authorized_chunks(
     user: UserContext,
     patient_id: Optional[str] = None,
     top_k: int = 8,
+    doc_types: Optional[List[str]] = None,
 ) -> List[Dict[str, Any]]:
     """
     Real vector similarity search + strict ABAC/tenant/patient filtering.
@@ -73,10 +76,32 @@ async def retrieve_authorized_chunks(
             
             # Construct strict ABAC filter
             filter_clauses = [
-                {"term": {"tenant_id.keyword": user.tenant_id}}
+                {"term": {"tenant_id.keyword": user.tenant_id}},
+                {
+                    "bool": {
+                        "must_not": [
+                            {"terms": {"sensitivity_level.keyword": list(RESTRICTED_SENSITIVITY_LEVELS)}}
+                        ]
+                    }
+                },
             ]
+
+            if user.consent_scopes:
+                filter_clauses.append({"terms": {"consent_scope.keyword": user.consent_scopes}})
+
+            if doc_types:
+                filter_clauses.append({"terms": {"doc_type.keyword": doc_types}})
             
-            if patient_id and user.can_access_patient(patient_id):
+            if patient_id:
+                if not user.can_access_patient(patient_id):
+                    logger.warning(
+                        "rag_patient_access_denied",
+                        tenant_id=user.tenant_id,
+                        user_id=user.user_id,
+                        role=user.role,
+                        patient_id=patient_id,
+                    )
+                    return []
                 filter_clauses.append({"term": {"patient_id.keyword": patient_id}})
             elif user.role == "patient":
                 filter_clauses.append({"term": {"patient_id.keyword": user.user_id}})
@@ -149,8 +174,27 @@ async def retrieve_authorized_chunks(
         }
 
         where_clauses = ["tenant_id = :tenant_id"]
+        where_clauses.append("(sensitivity_level IS NULL OR sensitivity_level NOT IN :restricted_sensitivity_levels)")
+        params["restricted_sensitivity_levels"] = tuple(RESTRICTED_SENSITIVITY_LEVELS)
 
-        if patient_id and user.can_access_patient(patient_id):
+        if user.consent_scopes:
+            where_clauses.append("(consent_scope IS NULL OR consent_scope IN :consent_scopes)")
+            params["consent_scopes"] = tuple(user.consent_scopes)
+
+        if doc_types:
+            where_clauses.append("doc_type IN :doc_types")
+            params["doc_types"] = tuple(doc_types)
+
+        if patient_id:
+            if not user.can_access_patient(patient_id):
+                logger.warning(
+                    "rag_patient_access_denied",
+                    tenant_id=user.tenant_id,
+                    user_id=user.user_id,
+                    role=user.role,
+                    patient_id=patient_id,
+                )
+                return []
             where_clauses.append("patient_id = :patient_id")
             params["patient_id"] = patient_id
         elif user.role == "patient":
@@ -177,7 +221,12 @@ async def retrieve_authorized_chunks(
             LIMIT :top_k
         """
 
-        result = await session.execute(text(sql), params)
+        statement = text(sql).bindparams(bindparam("restricted_sensitivity_levels", expanding=True))
+        if user.consent_scopes:
+            statement = statement.bindparams(bindparam("consent_scopes", expanding=True))
+        if doc_types:
+            statement = statement.bindparams(bindparam("doc_types", expanding=True))
+        result = await session.execute(statement, params)
         rows = result.mappings().all()
 
         chunks = []

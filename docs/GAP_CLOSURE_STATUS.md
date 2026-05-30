@@ -14,26 +14,42 @@ Last updated: 2026-05-30
 - Fixed low-confidence router fallback and admin de-identified MCP handling.
 - Prevented `simple_llm` from retrieving PHI.
 - Added audit logging/query helpers and audit endpoints for events, access, and model usage.
-- Created real review queue entries for chat responses requiring human review.
+- Created DB-backed review queue entries for chat responses requiring human review, including role-scoped listing, resolution timestamps, escalation, fallback behavior, and audit events.
 - Added minimized chat-history persistence with graceful fallback.
+- Tightened Cognito/JWKS verification for production mode: required Cognito config, issuer validation, Cognito `token_use` handling, ID-token audience checks, and access-token client ID checks.
+- Disabled unauthenticated demo-user fallback whenever `USE_REAL_AWS=true`.
+- Added Cognito custom consent-scope mapping into request context.
+- Hardened document upload authorization with patient ABAC checks, consent-scope checks, and filename sanitization before S3 key construction.
+- Tightened RAG retrieval filters with explicit patient access denial, consent-scope filtering, restricted sensitivity exclusions, and optional document-type constraints.
+- Replaced demo Hindsight Memory retrieval with repository-backed, scoped, minimized retrieval that filters role, patient scope, sensitivity, and clinical terms.
+- Stopped raw candidate content from being retained in memory audit events; blocked/proposed content is represented by hash and length instead.
+- Fixed readiness DB check to use SQLAlchemy `text("SELECT 1")`.
+- Disabled the local `/auth/login` JWT minting endpoint outside development and real-AWS mode.
+- Added production-like runtime configuration validation for unsafe CORS, missing Cognito configuration, and unchanged local JWT secrets.
+- Added API security headers, no-store cache headers for API responses, and HSTS when running with real AWS.
+- Made Redis rate-limit outages fail closed in real AWS mode while allowing explicit degraded-open local development behavior.
+- Added MCP retrieval-poisoning defense to block prompt-injection patterns inside retrieved chunks before they can reach model context.
+- Tightened MCP consent checks to enforce the chunk's actual consent scope, not only generic treatment consent.
+- Added focused regression tests for review authorization, governed memory retrieval, and memory audit minimization.
+- Added focused regression tests for production auth hardening, runtime config validation, and MCP prompt-injection blocking.
 - Updated Docker build context so platform-api can import sibling service packages.
 - Updated CI so critical tests, Terraform validation, frontend build, and critical Ruff checks are no longer silently ignored.
 
 ## Still Not Production-Complete
 
-- Cognito/JWKS validation is not fully implemented; local JWT/demo auth still exists.
+- Cognito/JWKS validation is implemented in code, but live Cognito pool configuration, MFA policy verification, and end-to-end AWS token tests remain needed before production.
 - The official `deepagents` SDK is adapter-supported but not pinned into the local requirements because the current repo still pins older LangChain versions.
-- Bedrock Claude/Titan providers and OpenSearch hybrid retrieval are still provider abstractions/local implementations, not real AWS clients.
+- Bedrock Claude/Titan providers and OpenSearch hybrid retrieval now have real-client paths behind `USE_REAL_AWS`, but they still need live AWS integration tests, IAM hardening, and production index validation.
 - Terraform modules beyond VPC are still not fully implemented.
 - Frontend remains a single consolidated demo experience, not the full required multi-page hospital application.
 - Document ingestion still needs full S3 upload, malware scanning, extraction, boilerplate removal, Titan embedding, and OpenSearch indexing.
-- Review tasks are still backed by an in-memory queue for the local workflow helper; full DB-backed workflow persistence remains needed.
+- Review tasks are DB-backed with a local fallback; full DB-backed workflow state transitions and reviewer assignment workflows still need expansion.
 - OpenTelemetry, CloudWatch dashboards, CloudTrail, WAF, KMS, IAM least privilege, VPC endpoints, and AWS deployment automation remain incomplete.
 - Full security/load/frontend/infrastructure test suites remain incomplete.
 
 ## Current Verification
 
-- `python -m pytest -q` passes: 20 tests.
+- `python -m pytest -q` passes: 29 tests.
 - `ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory-service/app services/agent-orchestration-service/app tests` passes.
 - `python -c "import app.main; print('backend import ok')"` passes from `services/platform-api`.
 - `npm run build` passes from `apps/web`.

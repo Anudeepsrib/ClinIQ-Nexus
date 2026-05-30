@@ -1,4 +1,4 @@
-from sqlalchemy import String, ForeignKey, Text, Boolean
+from sqlalchemy import DateTime, String, ForeignKey, Text, Boolean
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base, TimestampMixin, UUIDPrimaryKeyMixin
@@ -18,6 +18,7 @@ class HumanReviewTask(Base, UUIDPrimaryKeyMixin, TimestampMixin):
     context_snapshot: Mapped[dict] = mapped_column(JSONB, default={})
     resolution_notes: Mapped[str | None] = mapped_column(Text)
     resolved_by_user_id: Mapped[str | None] = mapped_column(String(36))
+    resolved_at: Mapped[DateTime | None] = mapped_column(DateTime(timezone=True))
 
 
 class AgentWorkflow(Base, UUIDPrimaryKeyMixin, TimestampMixin):

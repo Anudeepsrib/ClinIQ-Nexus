@@ -6,11 +6,33 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 
+from ..repositories.memory_repository import MemoryRepository
+
+
+FORBIDDEN_CLINICAL_TERMS = {
+    "diagnosis",
+    "diagnosed",
+    "lab",
+    "troponin",
+    "potassium",
+    "creatinine",
+    "glucose",
+    "sodium",
+    "medication",
+    "dose",
+    "psychotherapy",
+    "atrial fibrillation",
+    "treatment",
+}
+
 
 class MemoryRetriever:
     """
     Retrieves approved, minimized memories with proper scoping.
     """
+
+    def __init__(self, repository: Optional[MemoryRepository] = None):
+        self.repository = repository or MemoryRepository()
 
     async def retrieve_for_context(
         self,
@@ -22,27 +44,43 @@ class MemoryRetriever:
     ) -> List[Dict[str, Any]]:
         """
         Retrieve memories that are safe for this exact context.
-        In production this queries the memory_records table with filters.
+        Memory is secondary context only. It is never used as clinical truth.
         """
-        # Placeholder implementation that returns safe demo memories
-        # Real version would use the repository with tenant + user + role filters
-        memories: List[Dict[str, Any]] = []
+        records = await self.repository.get_memories_for_user(
+            tenant_id=tenant_id,
+            user_id=user_id,
+            limit=max(limit * 2, limit),
+        )
 
-        # Example safe memories (in real system these come from DB)
-        if role in ["care_coordinator", "clinician"]:
-            memories.append({
-                "memory_id": "mem_demo_001",
-                "memory_type": "workflow_preference",
-                "memory_text_minimized": "Care coordinator prefers to see transportation and insurance authorization status first in discharge summaries.",
-                "sensitivity_level": "low",
+        approved: List[Dict[str, Any]] = []
+        for record in records:
+            if record.get("tenant_id") and record["tenant_id"] != tenant_id:
+                continue
+            if record.get("user_id") and record["user_id"] != user_id:
+                continue
+            if record.get("role") and record["role"] != role:
+                continue
+            if patient_id and record.get("patient_id") not in {None, patient_id}:
+                continue
+
+            text = record.get("memory_text_minimized") or record.get("content") or ""
+            lowered = text.lower()
+            if not text or any(term in lowered for term in FORBIDDEN_CLINICAL_TERMS):
+                continue
+
+            sensitivity = record.get("sensitivity_level") or "low"
+            if sensitivity not in {"low", "medium"}:
+                continue
+
+            approved.append({
+                "memory_id": record.get("memory_id") or record.get("id"),
+                "memory_type": record.get("memory_type"),
+                "memory_text_minimized": text,
+                "sensitivity_level": sensitivity,
+                "source_workflow_id": record.get("source_workflow_id"),
+                "patient_id": record.get("patient_id"),
             })
+            if len(approved) >= limit:
+                break
 
-        if role == "clinician":
-            memories.append({
-                "memory_id": "mem_demo_002",
-                "memory_type": "formatting_preference",
-                "memory_text_minimized": "Clinician prefers chart summaries in concise bullet format with citations.",
-                "sensitivity_level": "low",
-            })
-
-        return memories[:limit]
+        return approved

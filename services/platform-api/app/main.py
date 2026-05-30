@@ -22,15 +22,17 @@ import structlog
 from fastapi import FastAPI, Request, Response
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from sqlalchemy import text
 from starlette.middleware.base import BaseHTTPMiddleware
 
-from app.core.config import settings
+from app.core.config import settings, validate_runtime_settings
 from app.core.context import TenantContext, UserContext, set_request_context
 from app.core.exceptions import ClinIQException, handle_cliniq_exception
 from app.core.logging import configure_logging
 from app.core.middleware import (
     CorrelationIdMiddleware,
     RateLimitMiddleware,
+    SecurityHeadersMiddleware,
     TenantIsolationMiddleware,
     AuthMiddleware,
 )
@@ -66,6 +68,10 @@ if OPENTELEMETRY_AVAILABLE and settings.USE_REAL_AWS:
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
     logger.info("starting_cliniq_nexus", environment=settings.ENVIRONMENT)
+    config_errors = validate_runtime_settings()
+    if config_errors:
+        logger.critical("blocking_runtime_configuration_errors", errors=config_errors)
+        raise RuntimeError("Invalid production configuration: " + "; ".join(config_errors))
 
     # Local dev convenience: migrations + seed are run via docker-compose command
     # In real production these are separate jobs
@@ -110,6 +116,7 @@ app.add_middleware(CorrelationIdMiddleware)
 app.add_middleware(TenantIsolationMiddleware)
 app.add_middleware(AuthMiddleware)
 app.add_middleware(RateLimitMiddleware)
+app.add_middleware(SecurityHeadersMiddleware)
 
 
 @app.exception_handler(ClinIQException)
@@ -163,7 +170,7 @@ async def readiness_check() -> dict:
     
     try:
         async with async_session() as session:
-            await session.execute("SELECT 1")
+            await session.execute(text("SELECT 1"))
             db_ok = True
     except Exception:
         logger.exception("readiness_db_check_failed")

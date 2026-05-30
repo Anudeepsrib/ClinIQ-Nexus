@@ -33,10 +33,10 @@ class HindsightMemoryService:
         self.extractor = MemoryExtractor()
         self.classifier = MemoryClassifier()
         self.governance = MemoryGovernanceService()
-        self.retriever = MemoryRetriever()
         self.writer = MemoryWriter()
         self.audit = MemoryAuditService()
         self.repository = MemoryRepository()
+        self.retriever = MemoryRetriever(self.repository)
 
     async def retrieve_governed_memories(
         self,

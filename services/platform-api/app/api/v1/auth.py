@@ -2,6 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException
 
+from app.core.config import settings
 from app.core.security import create_demo_token, create_demo_user_context
 from app.core.context import get_current_user
 from app.schemas.auth import LoginRequest, TokenResponse, UserMe
@@ -12,6 +13,12 @@ router = APIRouter()
 @router.post("/login", response_model=TokenResponse)
 async def login(body: LoginRequest):
     """Demo login. In production this would exchange Cognito code or SRP."""
+    if settings.USE_REAL_AWS or settings.ENVIRONMENT != "development":
+        raise HTTPException(
+            status_code=404,
+            detail="Local demo login is disabled outside development. Use Cognito authentication.",
+        )
+
     if "@" not in body.email:
         raise HTTPException(400, "Invalid email format")
 
