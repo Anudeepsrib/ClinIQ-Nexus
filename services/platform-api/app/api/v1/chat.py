@@ -12,7 +12,9 @@ from app.services.mcp.service import MCPContextGovernanceService
 from app.services.rag.service import retrieve_authorized_chunks
 from app.services.memory.service import memory_service
 from app.providers.model_router import model_router
-from app.core.logging import logger
+import structlog
+
+logger = structlog.get_logger(__name__)
 
 router = APIRouter()
 
