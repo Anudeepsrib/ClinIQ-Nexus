@@ -65,6 +65,63 @@ See [ARCHITECTURE.md](ARCHITECTURE.md) for the full interview-ready explanation 
 - LangGraph orchestration patterns
 - Production vs local provider abstractions
 
+### High-Level System Architecture
+
+```mermaid
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph Client["Client Layer"]
+        UI[Next.js Frontend<br/>Role-aware Chat + Review Queue]
+    end
+
+    subgraph Platform["MediCore Platform API (FastAPI)"]
+        direction TB
+        Auth[Auth + RBAC/ABAC Middleware]
+        Router[Deterministic Intent Router<br/>+ Safety Lexicon]
+        MCP[MCP Governance Layer<br/>Non-bypassable PHI Filter]
+        RAG[RAG Service<br/>pgvector / OpenSearch]
+        subgraph Agents["Agentic Layer"]
+            LG[LangGraph State Machines]
+            DA[LangChain Deep Agents<br/>(Planner-Executor-Critic)]
+        end
+        Memory[Hindsight Memory<br/>Governed + Audited]
+        Review[Human Review State Machine]
+        Audit[Immutable Audit Service]
+    end
+
+    subgraph External["External / AWS (Production)"]
+        Bedrock[AWS Bedrock<br/>Claude 3.5 Sonnet + Titan]
+        OS[OpenSearch Serverless]
+        RDS[(PostgreSQL + pgvector)]
+        S3[(S3 + KMS)]
+    end
+
+    UI --> Auth
+    Auth --> Router
+    Router --> MCP
+    MCP --> RAG
+    MCP --> LG
+    LG --> DA
+    DA --> MCP
+    RAG --> MCP
+    Memory --> MCP
+    LG --> Review
+    DA --> Memory
+    Review --> Audit
+    MCP --> Audit
+    RAG -.-> OS
+    RAG -.-> RDS
+    LG -.-> Bedrock
+    Memory -.-> RDS
+    Audit -.-> S3
+```
+
+> **Key Principle**: No path to an LLM exists that bypasses the MCP Governance layer. Deep Agents and Memory are strictly governed.
+
+---
+
+## Canonical Use Cases (All Implemented)
+
 ## Canonical Use Cases (All Implemented)
 
 1. Patient lab summary (simple_rag)
@@ -102,6 +159,9 @@ This is a **reference-grade architectural implementation** designed for:
 It is **not** a production deployment ready for real PHI without significant additional work (see [DEPLOYMENT.md](docs/DEPLOYMENT.md) and PRODUCTION_TODO comments).
 
 See [GAP_CLOSURE_STATUS.md](docs/GAP_CLOSURE_STATUS.md) for the latest implementation-hardening status and remaining production work.
+
+**Deep technical guides:**
+- [Deep Agents & Hindsight Memory Integration](docs/deep-agents-and-hindsight-memory.html) — Architecture + code-level explanation with interactive diagrams.
 
 ## License & Compliance Notice
 

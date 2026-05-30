@@ -64,6 +64,8 @@ class HindsightMemoryService:
         Full write pipeline:
         Extract → Classify → Govern → (if approved) Write + Audit
         """
+        candidate = self._normalize_candidate(candidate, user_role)
+
         classification = self.classifier.classify(candidate)
         candidate["memory_type"] = classification["memory_type"]
 
@@ -103,3 +105,32 @@ class HindsightMemoryService:
                 "reason": gov_decision["reason"],
                 "audit_id": audit_id,
             }
+
+    def _normalize_candidate(self, candidate: Dict[str, Any], user_role: str) -> Dict[str, Any]:
+        """
+        Run the extractor before classification when the input is raw text.
+
+        Deep Agents usually submit an already-formed candidate, while chat/API
+        paths may submit a broader turn. In both cases we keep the original
+        content if the conservative extractor finds no durable preference so
+        clinical-content blocking still happens.
+        """
+        normalized = dict(candidate)
+        content = str(normalized.get("content") or "").strip()
+        if not content:
+            return normalized
+
+        extracted = self.extractor.extract_candidates(
+            content,
+            role=user_role,
+            source=str(normalized.get("source") or "memory_candidate"),
+        )
+        if not extracted:
+            return normalized
+
+        first = extracted[0]
+        normalized["content"] = first.get("content", content)
+        normalized["memory_type"] = first.get("memory_type", normalized.get("memory_type", "preference"))
+        normalized["source"] = first.get("source", normalized.get("source"))
+        normalized["extracted_candidate_count"] = len(extracted)
+        return normalized

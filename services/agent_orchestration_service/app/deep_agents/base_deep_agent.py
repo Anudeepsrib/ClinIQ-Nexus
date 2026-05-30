@@ -99,7 +99,15 @@ class BaseDeepAgent(ABC):
         """Whether the official LangChain Deep Agents SDK is installed."""
         return create_deep_agent is not None
 
-    def build_langchain_deep_agent(self, system_prompt: str, model: Any = None) -> Any:
+    def build_langchain_deep_agent(
+        self,
+        system_prompt: str,
+        model: Any = None,
+        interrupt_on: Optional[Dict[str, Any]] = None,
+        checkpointer: Any = None,
+        memory: Optional[List[str]] = None,
+        store: Any = None,
+    ) -> Any:
         """
         Build the official LangChain Deep Agent harness when the optional
         `deepagents` package is installed.
@@ -110,10 +118,36 @@ class BaseDeepAgent(ABC):
         """
         if create_deep_agent is None:
             return None
+        if interrupt_on is None:
+            default_interrupts = {
+                "propose_memory_candidate": {"allowed_decisions": ["approve", "reject"]},
+                "create_human_review_task": False,
+                "audit_memory_event": False,
+                "classify_memory_candidate": False,
+                "retrieve_governed_memory": False,
+                "governed_rag_search": False,
+            }
+            tool_names = set(self._allowed_tool_names)
+            interrupt_on = {
+                name: config
+                for name, config in default_interrupts.items()
+                if name in tool_names
+            }
+        if checkpointer is None and interrupt_on:
+            try:
+                from langgraph.checkpoint.memory import MemorySaver
+
+                checkpointer = MemorySaver()
+            except Exception:
+                checkpointer = None
         return create_deep_agent(
             model=model,
             tools=self.allowed_tools,
             system_prompt=system_prompt,
+            interrupt_on=interrupt_on,
+            checkpointer=checkpointer,
+            memory=memory,
+            store=store,
         )
 
     @abstractmethod

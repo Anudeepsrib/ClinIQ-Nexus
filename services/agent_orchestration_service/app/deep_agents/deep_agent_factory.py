@@ -91,7 +91,6 @@ class DeepAgentFactory:
             ClassifyMemoryCandidateTool,
             RetrieveGovernedMemoryTool,
             ProposeMemoryCandidateTool,
-            WriteApprovedMemoryTool,
         )
         from .tools.human_review_tools import CreateHumanReviewTaskTool
         from .tools.document_tools import GetDocumentMetadataTool
@@ -101,7 +100,6 @@ class DeepAgentFactory:
         agent.register_tool(GovernedRAGTool(agent.context))
         agent.register_tool(ProposeMemoryCandidateTool(agent.context))
         agent.register_tool(ClassifyMemoryCandidateTool(agent.context))
-        agent.register_tool(WriteApprovedMemoryTool(agent.context))
         agent.register_tool(AuditMemoryEventTool(agent.context))
         agent.register_tool(CreateHumanReviewTaskTool(agent.context))
 

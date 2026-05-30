@@ -52,18 +52,38 @@ class MemoryService:
         agent_output: Optional[Dict[str, Any]] = None,
     ) -> Optional[Dict[str, Any]]:
         if self._using_full:
-            candidate = {
-                "content": conversation_turn.get("content", ""),
-                "memory_type": "preference",
-                "source_workflow_id": agent_output.get("workflow_id") if agent_output else None,
-                "patient_id": conversation_turn.get("patient_id"),
-            }
-            return await self._service.process_memory_candidate(
-                candidate=candidate,
-                user_role=user.role,
-                tenant_id=user.tenant_id,
-                user_id=user.user_id,
-            )
+            candidates = []
+            if agent_output and agent_output.get("memory_candidates"):
+                candidates.extend(agent_output["memory_candidates"])
+            else:
+                candidates.extend(
+                    self._service.extractor.extract_candidates(
+                        conversation_turn.get("content", ""),
+                        user.role,
+                        source="chat",
+                    )
+                )
+
+            if not candidates:
+                return None
+
+            last_result: Optional[Dict[str, Any]] = None
+            for candidate in candidates:
+                enriched = {
+                    **candidate,
+                    "source_workflow_id": candidate.get("source_workflow_id")
+                    or (agent_output.get("workflow_id") if agent_output else None),
+                    "patient_id": candidate.get("patient_id") or conversation_turn.get("patient_id"),
+                }
+                last_result = await self._service.process_memory_candidate(
+                    candidate=enriched,
+                    user_role=user.role,
+                    tenant_id=user.tenant_id,
+                    user_id=user.user_id,
+                )
+                if last_result.get("status") == "stored":
+                    return last_result
+            return last_result
         return None  # Full implementation required per spec
 
     async def retrieve_relevant(

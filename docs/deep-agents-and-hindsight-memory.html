@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ClinIQ-Nexus | Deep Agents and Hindsight Memory Integration</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.3/dist/mermaid.min.js"></script>
+    <style>
+        :root {
+            --ink: #0f172a;
+            --muted: #475569;
+            --line: #dbe3ef;
+            --panel: #ffffff;
+            --blue: #2563eb;
+            --teal: #0f766e;
+            --amber: #b45309;
+            --violet: #7c3aed;
+            --red: #dc2626;
+            --green: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            margin: 0;
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            color: var(--ink);
+            background:
+                linear-gradient(180deg, #f8fafc 0%, #eef6f5 42%, #f8fafc 100%);
+        }
+
+        code,
+        pre {
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+        }
+
+        .page-shell {
+            max-width: 1440px;
+            margin: 0 auto;
+        }
+
+        .top-nav {
+            backdrop-filter: blur(16px);
+            background: rgba(255, 255, 255, 0.92);
+            border-bottom: 1px solid var(--line);
+        }
+
+        .brand-mark {
+            width: 36px;
+            height: 36px;
+            display: grid;
+            place-items: center;
+            border-radius: 8px;
+            background: #0f766e;
+            color: white;
+            font-weight: 800;
+        }
+
+        .doc-card {
+            background: rgba(255, 255, 255, 0.96);
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            box-shadow: 0 18px 50px rgba(15, 23, 42, 0.07);
+        }
+
+        .flat-panel {
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+        }
+
+        .mini-card {
+            border: 1px solid #dbe3ef;
+            background: #ffffff;
+            border-radius: 8px;
+        }
+
+        .tag {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.375rem;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: #ffffff;
+            padding: 0.25rem 0.625rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #334155;
+            white-space: nowrap;
+        }
+
+        .tag-blue { color: #1d4ed8; border-color: #bfdbfe; background: #eff6ff; }
+        .tag-teal { color: #0f766e; border-color: #99f6e4; background: #f0fdfa; }
+        .tag-violet { color: #6d28d9; border-color: #ddd6fe; background: #f5f3ff; }
+        .tag-amber { color: #92400e; border-color: #fed7aa; background: #fff7ed; }
+        .tag-red { color: #991b1b; border-color: #fecaca; background: #fef2f2; }
+        .tag-green { color: #166534; border-color: #bbf7d0; background: #f0fdf4; }
+
+        .section-kicker {
+            color: #64748b;
+            font-weight: 800;
+            font-size: 0.75rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+
+        .toc a {
+            display: block;
+            border-left: 3px solid transparent;
+            padding: 0.38rem 0.5rem 0.38rem 0.75rem;
+            color: #475569;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .toc a:hover,
+        .toc a.active {
+            color: var(--teal);
+            border-left-color: var(--teal);
+            background: #f0fdfa;
+        }
+
+        .callout {
+            border-left: 4px solid var(--blue);
+            background: #eff6ff;
+            border-radius: 8px;
+        }
+
+        .callout.warning {
+            border-left-color: var(--amber);
+            background: #fff7ed;
+        }
+
+        .callout.danger {
+            border-left-color: var(--red);
+            background: #fef2f2;
+        }
+
+        .callout.success {
+            border-left-color: var(--green);
+            background: #f0fdf4;
+        }
+
+        .mermaid-wrap {
+            background: #ffffff;
+            border: 1px solid var(--line);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+        }
+
+        .mermaid {
+            min-width: 640px;
+            min-height: 160px;
+        }
+
+        .code-block {
+            background: #0f172a;
+            color: #e2e8f0;
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            border: 1px solid #1e293b;
+            font-size: 0.82rem;
+            line-height: 1.55;
+            white-space: pre;
+        }
+
+        .light-code {
+            background: #f8fafc;
+            color: #0f172a;
+            border: 1px solid var(--line);
+        }
+
+        .matrix-table th {
+            background: #f8fafc;
+            color: #334155;
+            font-weight: 800;
+            text-align: left;
+        }
+
+        .matrix-table th,
+        .matrix-table td {
+            border-bottom: 1px solid #e2e8f0;
+            padding: 1rem;
+            vertical-align: top;
+        }
+
+        .file-link {
+            color: #075985;
+            font-weight: 700;
+            text-decoration: underline;
+            text-decoration-thickness: 1px;
+            text-underline-offset: 3px;
+        }
+
+        @media (max-width: 1024px) {
+            .mermaid {
+                min-width: 760px;
+            }
+        }
+
+        @media print {
+            .top-nav,
+            .toc-column {
+                display: none;
+            }
+
+            body {
+                background: #ffffff;
+            }
+
+            .doc-card,
+            .flat-panel,
+            .mini-card,
+            .mermaid-wrap {
+                box-shadow: none;
+                break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <nav class="top-nav sticky top-0 z-50">
+        <div class="page-shell px-5 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <a href="#top" class="flex items-center gap-3 no-underline text-slate-900">
+                    <span class="brand-mark">CN</span>
+                    <span>
+                        <span class="block text-sm font-extrabold tracking-tight">ClinIQ-Nexus</span>
+                        <span class="block text-xs text-slate-500 font-semibold">Deep Agents + Hindsight Memory</span>
+                    </span>
+                </a>
+                <div class="hidden lg:flex items-center gap-5 text-sm font-bold">
+                    <a class="text-slate-600 hover:text-teal-700" href="#basics">Basics</a>
+                    <a class="text-slate-600 hover:text-teal-700" href="#deep-agents">Deep Agents</a>
+                    <a class="text-slate-600 hover:text-teal-700" href="#memory">Memory</a>
+                    <a class="text-slate-600 hover:text-teal-700" href="#integration">Integration</a>
+                    <a class="text-slate-600 hover:text-teal-700" href="#advanced">Advanced</a>
+                    <a class="text-slate-600 hover:text-teal-700" href="#fact-check">Fact Check</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main id="top" class="page-shell px-5 lg:px-8 py-8">
+        <section class="doc-card p-6 lg:p-9">
+            <div class="flex flex-wrap gap-2 mb-6">
+                <span class="tag tag-green">Fact-checked May 30, 2026</span>
+                <span class="tag tag-teal">Clinical AI reference architecture</span>
+                <span class="tag tag-blue">LangGraph orchestration</span>
+                <span class="tag tag-violet">Governed memory</span>
+            </div>
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+                <div class="lg:col-span-7">
+                    <p class="section-kicker mb-3">Integration guide</p>
+                    <h1 class="text-4xl lg:text-6xl font-black tracking-tight leading-[1.02]">
+                        Deep Agents and Hindsight Memory in ClinIQ-Nexus
+                    </h1>
+                    <p class="mt-5 text-lg lg:text-xl text-slate-600 leading-relaxed max-w-4xl">
+                        This guide explains how the platform combines deterministic routing, MCP context governance,
+                        LangGraph workflows, route-scoped Deep Agents, and governed long-term memory. It starts with
+                        the basics, then moves into the code-level contracts, safety boundaries, and advanced production
+                        considerations.
+                    </p>
+                    <div class="mt-6 callout warning p-4 text-sm text-slate-700">
+                        <strong>Important naming note:</strong> in this repository, <code>MCP</code> means the local
+                        <code>MCPContextGovernanceService</code>, a context policy gate that filters and transforms
+                        data before model use. Do not confuse that with the broader Model Context Protocol ecosystem
+                        unless the platform explicitly wires external MCP servers later.
+                    </div>
+                </div>
+                <div class="lg:col-span-5 flat-panel p-5">
+                    <h2 class="text-lg font-extrabold mb-3">Executive summary</h2>
+                    <ul class="space-y-3 text-sm text-slate-700">
+                        <li><strong>Deep Agents are not routers.</strong> The deterministic intent router chooses the route first; Deep Agents are created only for registered complex routes.</li>
+                        <li><strong>Memory is not clinical truth.</strong> Hindsight Memory stores governed preferences or workflow continuity notes, never diagnoses, labs, medications, or treatment facts.</li>
+                        <li><strong>Current implementation is hybrid.</strong> The repo pins <code>deepagents==0.5.0</code> and can build the official harness, but most local agent classes return deterministic structured outputs.</li>
+                        <li><strong>Writes are governed.</strong> A memory candidate is classified, evaluated, audited, and then stored only if approved.</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-8 mt-8">
+            <aside class="toc-column hidden xl:block xl:col-span-3">
+                <div class="sticky top-24 flat-panel p-5">
+                    <p class="section-kicker mb-3">On this page</p>
+                    <nav class="toc" id="toc">
+                        <a href="#basics">1. Basics</a>
+                        <a href="#architecture">2. Baseline architecture</a>
+                        <a href="#deep-agents">3. Deep Agents</a>
+                        <a href="#memory">4. Hindsight Memory</a>
+                        <a href="#integration">5. Integration flow</a>
+                        <a href="#advanced">6. Advanced controls</a>
+                        <a href="#decision-guide">7. Decision guide</a>
+                        <a href="#fact-check">8. Fact check notes</a>
+                        <a href="#references">9. References</a>
+                    </nav>
+                    <div class="mt-6 pt-5 border-t border-slate-200 text-xs text-slate-600">
+                        <p class="font-extrabold mb-2">Diagram color key</p>
+                        <p><span class="inline-block w-3 h-3 rounded-sm bg-red-200 border border-red-500 align-middle mr-2"></span>Governance / safety</p>
+                        <p><span class="inline-block w-3 h-3 rounded-sm bg-cyan-200 border border-cyan-600 align-middle mr-2"></span>Agentic execution</p>
+                        <p><span class="inline-block w-3 h-3 rounded-sm bg-violet-200 border border-violet-600 align-middle mr-2"></span>Hindsight Memory</p>
+                        <p><span class="inline-block w-3 h-3 rounded-sm bg-blue-200 border border-blue-600 align-middle mr-2"></span>Platform core</p>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="xl:col-span-9 space-y-8">
+                <section id="basics" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">01 - Basics</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">The four moving parts</h2>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        The integration is easier to reason about if each layer has one job. Routing decides
+                        <em>what kind of work this is</em>. MCP governance decides <em>what context is safe</em>.
+                        LangGraph decides <em>which workflow state comes next</em>. Deep Agents and Hindsight Memory
+                        are optional depth layers used inside those boundaries.
+                    </p>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                        <div class="mini-card p-4">
+                            <span class="tag tag-blue">Deterministic router</span>
+                            <h3 class="font-extrabold mt-3">Admission control before agents</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                The platform routes user requests with deterministic rules and policy overrides before
+                                any Deep Agent is considered. This keeps safety-critical routing auditable and testable.
+                            </p>
+                        </div>
+                        <div class="mini-card p-4">
+                            <span class="tag tag-red">MCP governance</span>
+                            <h3 class="font-extrabold mt-3">Context filtering and transformation</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                <code>MCPContextGovernanceService.govern()</code> enforces tenant isolation, patient scope,
+                                consent, role transformation, prompt-injection blocking, and review flags.
+                            </p>
+                        </div>
+                        <div class="mini-card p-4">
+                            <span class="tag tag-teal">Deep Agents</span>
+                            <h3 class="font-extrabold mt-3">Complex reasoning inside a route</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                The official <code>deepagents</code> package is an agent harness built on LangGraph. This repo
+                                wraps it with a route registry, scoped tools, and deterministic local fallbacks.
+                            </p>
+                        </div>
+                        <div class="mini-card p-4">
+                            <span class="tag tag-violet">Hindsight Memory</span>
+                            <h3 class="font-extrabold mt-3">Non-authoritative continuity</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                Hindsight Memory is ClinIQ-Nexus-specific. It stores approved, minimized preferences and
+                                workflow notes, not clinical facts or document evidence.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="callout p-4 mt-6 text-sm text-slate-700">
+                        <strong>Rule of thumb:</strong> RAG answers "what do the governed source documents say?"
+                        Hindsight Memory answers "what safe preference or workflow pattern should the assistant remember?"
+                        Deep Agents answer "does this complex route need a planner, tool user, and critic?"
+                    </div>
+                </section>
+
+                <section id="architecture" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">02 - Baseline architecture</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Where Deep Agents and Memory sit</h2>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        Deep Agents are not a top-level substitute for the platform. They are invoked after the user,
+                        tenant, route, and initial context have already been governed. Hindsight Memory is also not a
+                        model-side scratchpad; it is a governed service that persists approved records to
+                        <code>memory_records</code>.
+                    </p>
+
+                    <div class="mermaid-wrap mt-6">
+                        <div class="mermaid">
+flowchart TB
+    classDef governance fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+    classDef agent fill:#cffafe,stroke:#0891b2,color:#164e63,stroke-width:2px
+    classDef memory fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,stroke-width:2px
+    classDef core fill:#dbeafe,stroke:#2563eb,color:#1e3a8a,stroke-width:1.5px
+    classDef data fill:#f8fafc,stroke:#64748b,color:#334155
+
+    User["User or workflow request"] --> API["FastAPI platform API"]
+    API --> Auth["Auth + RBAC / ABAC"]
+    Auth --> Router["Deterministic intent router"]
+    Router --> MCP["MCPContextGovernanceService"]
+    MCP --> RAG["Authorized RAG retrieval"]
+    MCP --> Graph["LangGraph workflow"]
+    Graph --> Factory["DeepAgentFactory"]
+    Factory --> Agent["Route-specific Deep Agent"]
+    Agent --> Tools["Scoped governed tools"]
+    Tools --> MCP
+    Agent --> MemTools["Memory tools"]
+    MemTools --> Memory["HindsightMemoryService"]
+    Memory --> Store[("memory_records")]
+    Graph --> Review["Human review state"]
+    MCP --> Audit["Audit events"]
+    Memory --> Audit
+    Review --> Audit
+    RAG --> Docs[("documents + document_chunks")]
+
+    class MCP,Review governance
+    class Factory,Agent,Tools agent
+    class Memory,MemTools,Store memory
+    class API,Auth,Router,RAG,Graph,Audit core
+    class Docs data
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6 text-sm">
+                        <div class="mini-card p-4">
+                            <h3 class="font-extrabold">No agentic routing</h3>
+                            <p class="text-slate-600 mt-2">The router decides the route before Deep Agents are available.</p>
+                        </div>
+                        <div class="mini-card p-4">
+                            <h3 class="font-extrabold">No raw memory writes</h3>
+                            <p class="text-slate-600 mt-2">Only Hindsight Memory service writes approved records.</p>
+                        </div>
+                        <div class="mini-card p-4">
+                            <h3 class="font-extrabold">No clinical source drift</h3>
+                            <p class="text-slate-600 mt-2">Clinical facts remain in governed RAG documents with citations.</p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="deep-agents" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">03 - Deep Agents</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Official harness plus ClinIQ-Nexus guardrails</h2>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        LangChain describes Deep Agents as a standalone harness for complex, multi-step agents with
+                        planning, filesystem-backed context, subagents, long-term memory, and LangGraph runtime features.
+                        ClinIQ-Nexus does not hand that harness unrestricted clinical access. Instead, it wraps Deep Agent
+                        creation behind <code>DeepAgentFactory</code> and registers only the tools allowed for the route
+                        and role.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Registered Deep Agent routes</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                The current registry contains six routes, not only discharge planning and prior authorization.
+                            </p>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4 text-sm">
+                                <span class="tag tag-teal">discharge_planning</span>
+                                <span class="tag tag-teal">chart_summary_complex</span>
+                                <span class="tag tag-teal">patient_message_triage</span>
+                                <span class="tag tag-teal">prior_authorization</span>
+                                <span class="tag tag-teal">hospital_operations</span>
+                                <span class="tag tag-teal">compliance_review</span>
+                            </div>
+                        </div>
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Current SDK status</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                <code>services/platform-api/requirements.txt</code> pins
+                                <code>deepagents==0.5.0</code>, <code>langchain==1.2.18</code>, and
+                                <code>langgraph==1.1.10</code>. <code>BaseDeepAgent</code> imports
+                                <code>create_deep_agent</code> when installed, but local route classes still return
+                                structured deterministic outputs for the demo/reference environment.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="mermaid-wrap mt-6">
+                        <div class="mermaid">
+flowchart TD
+    classDef gov fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+    classDef agent fill:#cffafe,stroke:#0891b2,color:#164e63,stroke-width:2px
+    classDef tool fill:#e0f2fe,stroke:#0284c7,color:#075985
+    classDef out fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef warn fill:#ffedd5,stroke:#f97316,color:#7c2d12
+
+    Route["Route chosen by deterministic router"] --> Registry{"Route in DEEP_AGENT_REGISTRY?"}
+    Registry -->|"No"| NoAgent["Return None; use normal workflow path"]
+    Registry -->|"Yes"| Context["Build DeepAgentContext"]
+    Context --> Instance["Instantiate route-specific agent"]
+    Instance --> Scope["Register scoped tools"]
+    Scope --> BaseTools["Base tools: RAG, memory proposal, classification, write pipeline, audit, human review"]
+    Scope --> RouteTools["Route tools: document metadata for discharge and prior authorization"]
+    Scope --> RoleTools["Role tools: governed memory retrieval for clinician, care coordinator, nurse"]
+    Scope --> ComplianceTools["Compliance / operations: audit decision logging"]
+    BaseTools --> Run["agent.run(task, governed_context)"]
+    RouteTools --> Run
+    RoleTools --> Run
+    ComplianceTools --> Run
+    Run --> Harness{"Official deepagents harness configured?"}
+    Harness -->|"Production path"| SDK["create_deep_agent(model, tools, system_prompt)"]
+    Harness -->|"Local fallback"| Fallback["Deterministic structured output"]
+    SDK --> Output["DeepAgentOutput"]
+    Fallback --> Output
+    Output --> Review["review flags + safety flags + citations + memory candidates"]
+
+    class Registry,Review gov
+    class Context,Instance,Scope,Run,Harness,SDK,Fallback agent
+    class BaseTools,RouteTools,RoleTools,ComplianceTools tool
+    class Output out
+    class NoAgent warn
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+                        <div>
+                            <h3 class="font-extrabold text-lg">Minimal code path</h3>
+                            <pre class="code-block mt-3"><code>deep_agent = DeepAgentFactory.create(
+    route="discharge_planning",
+    tenant_id=user.tenant_id,
+    hospital_id=None,
+    facility_id=None,
+    user_id=user.user_id,
+    role=user.role,
+    patient_id=req.patient_id,
+    workflow_id=f"discharge_{req.patient_id}",
+)
+
+if deep_agent:
+    result = await deep_agent.run(
+        task=req.query,
+        governed_context=mcp_decision.allowed_context,
+    )</code></pre>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-lg">Key implementation files</h3>
+                            <ul class="mt-3 space-y-3 text-sm text-slate-700">
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/deep_agent_factory.py">deep_agent_factory.py</a> owns route registration and tool scoping.</li>
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/base_deep_agent.py">base_deep_agent.py</a> defines context, output contract, and optional official SDK adapter.</li>
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/tools/rag_tools.py">rag_tools.py</a> re-applies MCP governance on Deep Agent retrieval.</li>
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/tools/memory_tools.py">memory_tools.py</a> is the only Deep Agent interface to Hindsight Memory.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="callout p-4 mt-6 text-sm text-slate-700">
+                        <strong>Deep Agents in this repo are a controlled capability, not a blanket autonomy layer.</strong>
+                        The factory creates an agent only after a route allowlist match, and the tool list is assembled
+                        from route and role. This application-level least-privilege model is especially important because
+                        the repository pins <code>deepagents==0.5.0</code>, while LangChain's newer declarative filesystem
+                        permission feature requires a later SDK version.
+                    </div>
+                </section>
+
+                <section id="memory" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">04 - Hindsight Memory</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Governed memory is not RAG and not the Deep Agents native memory store</h2>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        LangChain Deep Agents can use filesystem-backed long-term memory. ClinIQ-Nexus intentionally uses
+                        a separate service called <code>HindsightMemoryService</code>. That service persists database records
+                        only after classification, governance, audit logging, and write approval. This keeps memory separate
+                        from clinical source documents and easier to review.
+                    </p>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">RAG</h3>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <li>Stores source-grounded clinical document chunks.</li>
+                                <li>Requires citation metadata.</li>
+                                <li>Used for clinical facts, document evidence, and answer grounding.</li>
+                                <li>Filtered by tenant, patient, consent, role, and route.</li>
+                            </ul>
+                        </div>
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Hindsight Memory</h3>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <li>Stores non-authoritative preferences and workflow continuity notes.</li>
+                                <li>Blocks forbidden clinical content such as labs, diagnoses, medications, doses, and treatment signals.</li>
+                                <li>Retrieves only low or medium sensitivity minimized text for the exact tenant, user, role, and patient context.</li>
+                                <li>Audits decisions with candidate hash and length instead of retaining raw blocked content.</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="mermaid-wrap mt-6">
+                        <div class="mermaid">
+flowchart LR
+    classDef input fill:#f8fafc,stroke:#64748b,color:#334155
+    classDef memory fill:#ede9fe,stroke:#7c3aed,color:#4c1d95,stroke-width:2px
+    classDef gov fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+    classDef ok fill:#dcfce7,stroke:#16a34a,color:#14532d
+    classDef note fill:#ffedd5,stroke:#f97316,color:#7c2d12
+
+    Candidate["Memory candidate"] --> Extractor["MemoryExtractor.extract_candidates"]
+    Extractor --> Normalize["Normalize candidate"]
+    Normalize --> Classifier["MemoryClassifier.classify"]
+    Classifier --> Governance["MemoryGovernanceService.evaluate"]
+    Governance --> Decision{"Approved?"}
+    Decision -->|"No"| AuditBlock["MemoryAuditService.log_memory_decision"]
+    AuditBlock --> Blocked["Return status=blocked"]
+    Decision -->|"Yes"| AuditApprove["MemoryAuditService.log_memory_decision"]
+    AuditApprove --> Writer["MemoryWriter.write_approved_memory"]
+    Writer --> Repository["MemoryRepository.save_memory_record"]
+    Repository --> Records[("memory_records")]
+    class Candidate input
+    class Extractor,Normalize,Classifier,Writer,Repository,Records memory
+    class Governance,Decision,AuditBlock,AuditApprove gov
+    class Blocked note
+    class Extractor note
+                        </div>
+                    </div>
+
+                    <div class="callout warning p-4 mt-6 text-sm text-slate-700">
+                        <strong>Implementation note:</strong> <code>process_memory_candidate()</code> now runs the
+                        conservative extractor before classification. If no durable preference is extracted, the original
+                        candidate is still classified and governed so clinical content can be blocked instead of ignored.
+                    </div>
+
+                    <div class="mt-6 grid grid-cols-1 lg:grid-cols-2 gap-5">
+                        <div>
+                            <h3 class="font-extrabold text-lg">Approved write path</h3>
+                            <pre class="code-block mt-3"><code>classification = classifier.classify(candidate)
+candidate["memory_type"] = classification["memory_type"]
+
+gov_decision = governance.evaluate(
+    candidate=candidate,
+    user_role=user_role,
+    tenant_id=tenant_id,
+)
+
+audit_id = await audit.log_memory_decision(...)
+
+if gov_decision["decision"] == "approved":
+    record = await writer.write_approved_memory(...)
+    await repository.save_memory_record(record)
+    return {"status": "stored", "memory_id": record["memory_id"]}</code></pre>
+                        </div>
+                        <div>
+                            <h3 class="font-extrabold text-lg">Retrieval path</h3>
+                            <div class="mermaid-wrap mt-3">
+                                <div class="mermaid">
+flowchart TD
+    classDef memory fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef gov fill:#fee2e2,stroke:#dc2626,color:#7f1d1d
+    classDef out fill:#dcfce7,stroke:#16a34a,color:#14532d
+
+    Request["retrieve_governed_memories"] --> Repo["Repository query by tenant + user"]
+    Repo --> Role["Role match"]
+    Role --> Patient["Patient scope match or global user memory"]
+    Patient --> ClinicalFilter["Drop forbidden clinical terms"]
+    ClinicalFilter --> Sensitivity["Allow low or medium sensitivity only"]
+    Sensitivity --> Limit["Return at most limit records"]
+    Limit --> Safe["Minimized memory snippets"]
+
+    class Repo,Safe memory
+    class Role,Patient,ClinicalFilter,Sensitivity gov
+    class Limit out
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="integration" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">05 - End-to-end integration</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">How a complex clinical workflow runs</h2>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        The most important design property is re-entry into governance. Initial RAG context is governed
+                        before it reaches a workflow. If a Deep Agent needs more context, it must use a governed tool.
+                        If it identifies a safe memory candidate, the candidate must go through Hindsight Memory service
+                        before persistence.
+                    </p>
+
+                    <div class="mermaid-wrap mt-6">
+                        <div class="mermaid">
+sequenceDiagram
+    actor User as User
+    participant API as Platform API
+    participant Router as Intent Router
+    participant MCP as MCP Governance
+    participant LG as LangGraph
+    participant Factory as DeepAgentFactory
+    participant Agent as Deep Agent
+    participant Tool as Governed Tool
+    participant Mem as Hindsight Memory
+    participant Review as Human Review
+
+    User->>API: Submit clinical or operational request
+    API->>Router: Classify route with deterministic policy
+    Router-->>API: route + safety flags
+    API->>MCP: Govern candidate context for route and role
+    MCP-->>API: allowed_context + redactions + review flags
+    API->>LG: Invoke workflow with governed state
+    LG->>Factory: create(route, tenant, role, patient)
+    Factory-->>LG: agent or None
+    LG->>Agent: run(task, allowed_context)
+    Agent->>Tool: Need more context
+    Tool->>MCP: Re-govern retrieved chunks
+    MCP-->>Tool: minimized authorized chunks
+    Tool-->>Agent: safe tool output
+    Agent->>Mem: Submit memory candidate through tool
+    Mem-->>Agent: stored or blocked with audit id
+    Agent-->>LG: DeepAgentOutput
+    LG->>Review: Create task if risk or blocker requires review
+    Review-->>API: workflow completed or awaiting review
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 mt-6">
+                        <div class="mini-card p-4">
+                            <span class="tag tag-red">Clinical safety</span>
+                            <h3 class="font-extrabold mt-3">Human review is a workflow state</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                Discharge planning, prior authorization, safety triage, and uncertain clinical outputs
+                                set review flags. This is represented in workflow state and review task data, not only in
+                                text displayed to the user.
+                            </p>
+                        </div>
+                        <div class="mini-card p-4">
+                            <span class="tag tag-violet">Memory write semantics</span>
+                            <h3 class="font-extrabold mt-3">Candidate is not persistence</h3>
+                            <p class="text-sm text-slate-600 mt-2">
+                                <code>BaseDeepAgent.propose_memory_candidate()</code> only returns a dictionary. Persistence
+                                happens only when a memory tool or API route submits that candidate to
+                                <code>HindsightMemoryService.process_memory_candidate()</code>.
+                            </p>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="advanced" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">06 - Advanced controls</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Safety boundaries that matter in production</h2>
+                    <p class="mt-4 text-slate-600 leading-relaxed">
+                        The reference implementation demonstrates the core integration. A production deployment should
+                        treat each boundary below as a testable, monitorable control with explicit ownership.
+                    </p>
+
+                    <div class="mermaid-wrap mt-6">
+                        <div class="mermaid">
+flowchart TB
+    classDef threat fill:#fee2e2,stroke:#dc2626,color:#7f1d1d,stroke-width:2px
+    classDef control fill:#dbeafe,stroke:#2563eb,color:#1e3a8a
+    classDef memory fill:#ede9fe,stroke:#7c3aed,color:#4c1d95
+    classDef audit fill:#f8fafc,stroke:#64748b,color:#334155
+
+    T1["Prompt injection in retrieved context"] --> C1["MCP prompt-injection marker block"]
+    T2["Agent asks for unauthorized patient data"] --> C2["RAG authorization + MCP patient scope"]
+    T3["Clinical fact proposed as memory"] --> C3["Memory keyword block + sensitivity filter"]
+    T4["Role overreach"] --> C4["Factory-scoped tools + role-based memory retrieval"]
+    T5["Silent unsafe output"] --> C5["requires_human_review + review task"]
+    T6["Untraceable decision"] --> C6["Audit events with correlation metadata"]
+    C1 --> A["Audit and policy tags"]
+    C2 --> A
+    C3 --> A
+    C4 --> A
+    C5 --> A
+    C6 --> A
+
+    class T1,T2,T3,T4,T5,T6 threat
+    class C1,C2,C4,C5 control
+    class C3 memory
+    class C6,A audit
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Production hardening checklist</h3>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <li>Move demo in-memory fallbacks to durable stores for audit, memory, and checkpoints.</li>
+                                <li>Attach tenant, patient, sensitivity, consent, and source metadata to every retrieved chunk.</li>
+                                <li>Add explicit memory consent, retention, expiration, deletion, and patient-visible audit policies.</li>
+                                <li>Use a production LangGraph checkpointer instead of in-process <code>MemorySaver</code>.</li>
+                                <li>Require human approval for high-risk tools and shared memory changes.</li>
+                                <li>Measure false positives and false negatives in memory clinical-content blocking.</li>
+                            </ul>
+                        </div>
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Upgrade path for official Deep Agents features</h3>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <li>Keep <code>DeepAgentFactory</code> as the application-level policy gate.</li>
+                                <li>Upgrade <code>deepagents</code> if you want declarative filesystem permissions.</li>
+                                <li>Prefer read-only shared memory for organization policy and compliance material.</li>
+                                <li>Keep Hindsight Memory as the source of governed user/workflow memory, even if the official harness uses scratch files internally.</li>
+                                <li>Wrap custom tools with MCP and memory audit hooks because SDK filesystem permissions do not govern custom tools.</li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+
+                <section id="decision-guide" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">07 - Decision guide</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Choose the smallest sufficient pattern</h2>
+                    <div class="overflow-x-auto mt-6">
+                        <table class="matrix-table w-full text-sm border border-slate-200 bg-white">
+                            <thead>
+                                <tr>
+                                    <th>Scenario</th>
+                                    <th>Use</th>
+                                    <th>Why</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td><strong>Simple source-grounded question</strong><br><span class="text-slate-500">Example: "summarize the latest authorized lab report."</span></td>
+                                    <td><span class="tag tag-blue">RAG + MCP</span></td>
+                                    <td>Fast, auditable, citation-friendly, and does not need a planner.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Multi-step clinical workflow</strong><br><span class="text-slate-500">Example: discharge readiness or prior authorization packet drafting.</span></td>
+                                    <td><span class="tag tag-teal">LangGraph + Deep Agent</span></td>
+                                    <td>Needs explicit workflow state plus route-scoped planning, tool use, and review flags.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Safe user preference</strong><br><span class="text-slate-500">Example: "show abnormal trends first in summaries."</span></td>
+                                    <td><span class="tag tag-violet">Hindsight Memory</span></td>
+                                    <td>Useful across sessions, but only after non-clinical governance and audit.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Patient-facing safety concern</strong><br><span class="text-slate-500">Example: chest pain, abnormal values, deterioration signal.</span></td>
+                                    <td><span class="tag tag-red">MCP + human review</span></td>
+                                    <td>Safety overrides and review state are more important than agentic depth.</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Compliance or operations analysis</strong><br><span class="text-slate-500">Example: cross-facility access anomaly or discharge bottleneck trend.</span></td>
+                                    <td><span class="tag tag-amber">Scoped agent + de-identification</span></td>
+                                    <td>May need multi-step analysis, but clinical content must be de-identified or review-gated.</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+
+                <section id="fact-check" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">08 - Fact check notes</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">What was corrected or clarified</h2>
+                    <div class="grid grid-cols-1 gap-4 mt-6">
+                        <div class="callout success p-4 text-sm text-slate-700">
+                            <strong>Correct:</strong> Deep Agents should be reserved for complex multi-step work, and
+                            the router should not be agentic. This matches the repo architecture and LangChain's guidance
+                            that simpler use cases can use ordinary agents or custom LangGraph workflows.
+                        </div>
+                        <div class="callout warning p-4 text-sm text-slate-700">
+                            <strong>Corrected:</strong> the current Deep Agent registry has six routes:
+                            <code>discharge_planning</code>, <code>chart_summary_complex</code>,
+                            <code>patient_message_triage</code>, <code>prior_authorization</code>,
+                            <code>hospital_operations</code>, and <code>compliance_review</code>.
+                        </div>
+                        <div class="callout warning p-4 text-sm text-slate-700">
+                            <strong>Corrected:</strong> Hindsight Memory is not LangChain Deep Agents' native
+                            filesystem memory. It is a ClinIQ-Nexus service that writes governed database records.
+                        </div>
+                        <div class="callout warning p-4 text-sm text-slate-700">
+                            <strong>Updated:</strong> <code>MemoryExtractor</code> is now called inside
+                            <code>HindsightMemoryService.process_memory_candidate()</code>. The executed write path is
+                            extract, normalize, classify, govern, audit, write, then save.
+                        </div>
+                        <div class="callout warning p-4 text-sm text-slate-700">
+                            <strong>Corrected:</strong> memory candidates produced by fallback agent classes are proposals.
+                            They are not automatically persisted unless submitted through the memory tools or memory API.
+                        </div>
+                        <div class="callout danger p-4 text-sm text-slate-700">
+                            <strong>Production caution:</strong> the docs for newer Deep Agents permissions state that
+                            filesystem permissions require <code>deepagents&gt;=0.5.2</code>, while this repo currently pins
+                            <code>0.5.0</code>. The current least-privilege guarantee comes from ClinIQ-Nexus factory tool
+                            scoping and governed custom tools, not SDK filesystem permissions.
+                        </div>
+                    </div>
+                </section>
+
+                <section id="references" class="doc-card p-6 lg:p-8">
+                    <p class="section-kicker">09 - References</p>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Sources used for this rewrite</h2>
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-5 mt-6">
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Local implementation</h3>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/deep_agent_factory.py">DeepAgentFactory registry and tool scoping</a></li>
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/base_deep_agent.py">BaseDeepAgent context, output, and SDK adapter</a></li>
+                                <li><a class="file-link" href="../services/agent_orchestration_service/app/deep_agents/tools/memory_tools.py">Deep Agent memory tools</a></li>
+                                <li><a class="file-link" href="../services/memory_service/app/services/hindsight_memory_service.py">HindsightMemoryService write and retrieval orchestration</a></li>
+                                <li><a class="file-link" href="../services/platform-api/app/services/mcp/service.py">MCPContextGovernanceService</a></li>
+                                <li><a class="file-link" href="../tests/unit/test_deep_agents/test_official_deepagents_sdk.py">Pinned SDK version tests</a></li>
+                            </ul>
+                        </div>
+                        <div class="flat-panel p-5">
+                            <h3 class="font-extrabold text-lg">Official docs checked</h3>
+                            <ul class="mt-3 space-y-2 text-sm text-slate-700">
+                                <li><a class="file-link" href="https://docs.langchain.com/oss/python/deepagents/overview" target="_blank" rel="noreferrer">LangChain Deep Agents overview</a></li>
+                                <li><a class="file-link" href="https://docs.langchain.com/oss/python/deepagents/memory" target="_blank" rel="noreferrer">LangChain Deep Agents memory</a></li>
+                                <li><a class="file-link" href="https://docs.langchain.com/oss/python/deepagents/permissions" target="_blank" rel="noreferrer">LangChain Deep Agents permissions</a></li>
+                                <li><a class="file-link" href="https://docs.langchain.com/oss/python/deepagents/human-in-the-loop" target="_blank" rel="noreferrer">LangChain Deep Agents human-in-the-loop</a></li>
+                                <li><a class="file-link" href="https://docs.langchain.com/oss/python/langgraph/persistence" target="_blank" rel="noreferrer">LangGraph persistence</a></li>
+                                <li><a class="file-link" href="https://docs.langchain.com/oss/python/langgraph/durable-execution" target="_blank" rel="noreferrer">LangGraph durable execution</a></li>
+                            </ul>
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+
+    <footer class="border-t border-slate-200 bg-white">
+        <div class="page-shell px-5 lg:px-8 py-8 text-sm text-slate-600">
+            <strong>ClinIQ-Nexus / MediCore AI Platform.</strong>
+            Reference implementation documentation only. Not for clinical use without formal validation,
+            security review, legal review, and operational controls.
+        </div>
+    </footer>
+
+    <script>
+        function initializeMermaid() {
+            if (typeof mermaid === "undefined") {
+                setTimeout(initializeMermaid, 500);
+                return;
+            }
+
+            mermaid.initialize({
+                startOnLoad: false,
+                securityLevel: "loose",
+                theme: "base",
+                themeVariables: {
+                    primaryColor: "#ffffff",
+                    primaryTextColor: "#0f172a",
+                    primaryBorderColor: "#94a3b8",
+                    lineColor: "#64748b",
+                    fontFamily: "Inter, ui-sans-serif, system-ui"
+                },
+                flowchart: {
+                    curve: "basis",
+                    htmlLabels: true,
+                    padding: 10
+                },
+                sequence: {
+                    diagramMarginX: 24,
+                    diagramMarginY: 20,
+                    actorMargin: 50,
+                    width: 150,
+                    height: 48,
+                    boxMargin: 10,
+                    noteMargin: 10,
+                    messageMargin: 36,
+                    useMaxWidth: true
+                }
+            });
+
+            mermaid.run({ nodes: document.querySelectorAll(".mermaid") })
+                .catch(function(error) {
+                    console.error("[Mermaid] render failed", error);
+                    document.querySelectorAll(".mermaid").forEach(function(node) {
+                        if (!node.querySelector("svg")) {
+                            node.innerHTML = "<div style='padding:12px;border:1px solid #fecaca;background:#fef2f2;color:#991b1b;border-radius:8px;font:13px ui-monospace,monospace;'>Mermaid diagram failed to render. Check the browser console for syntax details.</div>";
+                        }
+                    });
+                });
+        }
+
+        function setupTocHighlight() {
+            var links = Array.prototype.slice.call(document.querySelectorAll("#toc a"));
+            var sections = links
+                .map(function(link) { return document.querySelector(link.getAttribute("href")); })
+                .filter(Boolean);
+
+            if (!("IntersectionObserver" in window) || sections.length === 0) return;
+
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (!entry.isIntersecting) return;
+                    links.forEach(function(link) { link.classList.remove("active"); });
+                    var active = links.find(function(link) {
+                        return link.getAttribute("href") === "#" + entry.target.id;
+                    });
+                    if (active) active.classList.add("active");
+                });
+            }, { rootMargin: "-20% 0px -70% 0px", threshold: 0.01 });
+
+            sections.forEach(function(section) { observer.observe(section); });
+        }
+
+        window.addEventListener("load", function() {
+            initializeMermaid();
+            setupTocHighlight();
+        });
+    </script>
+</body>
+</html>

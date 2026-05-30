@@ -73,13 +73,34 @@ async def detect_risk_signals(state: RiskState) -> RiskState:
 async def generate_structured_output(state: RiskState) -> RiskState:
     """Generate nurse-friendly structured summary and trigger review if needed."""
     mcp = MCPContextGovernanceService()
-    # Governance still applies even for multi-patient operational views
-    mcp_dec = await mcp.govern([], state["user"], "agentic_workflow", None, state["query"])
+    signal_chunks = [
+        {
+            "tenant_id": state["user"].tenant_id,
+            "patient_id": sig["patient_id"],
+            "doc_type": "clinical_risk_signal",
+            "sensitivity_level": "phi",
+            "consent_scope": "treatment",
+            "content": (
+                f"{sig['type']} severity={sig['severity']}: "
+                f"{sig['description']} source={sig['source']}"
+            ),
+        }
+        for sig in state["signals"]
+    ]
+    # Governance still applies before detected clinical signals reach a model.
+    mcp_dec = await mcp.govern(
+        candidate_chunks=signal_chunks,
+        user=state["user"],
+        route="clinical_safety_triage",
+        patient_id=None,
+        query=state["query"],
+    )
+    state["requires_human_review"] = state["requires_human_review"] or mcp_dec.requires_human_review
 
     gen = await model_router.generate(
         query=state["query"],
-        allowed_context=[{"content": str(state["signals"])}],
-        route="agentic_workflow",
+        allowed_context=mcp_dec.allowed_context,
+        route="clinical_safety_triage",
         user_role=state["user"].role,
         requires_review=state["requires_human_review"],
     )
