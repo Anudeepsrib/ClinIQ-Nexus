@@ -78,15 +78,38 @@ class AuthMiddleware(BaseHTTPMiddleware):
 
         try:
             payload = decode_jwt(token)
-            user_ctx = UserContext(
-                user_id=payload["sub"],
-                role=payload.get("role", "patient"),
-                tenant_id=payload.get("tenant_id", settings.DEFAULT_TENANT_ID),
-                email=payload.get("email", ""),
-                full_name=payload.get("name", ""),
-                assigned_patient_ids=set(payload.get("assigned_patients", [])),
-                can_access_all_patients_in_tenant=payload.get("role") in {"clinician", "admin", "care_coordinator"},
-            )
+            
+            if settings.USE_REAL_AWS:
+                # Map Cognito standard and custom claims
+                role = payload.get("custom:role", "patient")
+                groups = payload.get("cognito:groups", [])
+                if not payload.get("custom:role") and groups:
+                    role = groups[0] # Fallback to group if custom:role not set
+                
+                tenant_id = payload.get("custom:tenant_id", settings.DEFAULT_TENANT_ID)
+                assigned_patients_str = payload.get("custom:assigned_patients", "")
+                assigned_patients = assigned_patients_str.split(",") if assigned_patients_str else []
+                
+                user_ctx = UserContext(
+                    user_id=payload["sub"],
+                    role=role,
+                    tenant_id=tenant_id,
+                    email=payload.get("email", ""),
+                    full_name=payload.get("name", payload.get("given_name", "") + " " + payload.get("family_name", "")).strip(),
+                    assigned_patient_ids=set(assigned_patients),
+                    can_access_all_patients_in_tenant=role in {"clinician", "admin", "care_coordinator"},
+                )
+            else:
+                user_ctx = UserContext(
+                    user_id=payload["sub"],
+                    role=payload.get("role", "patient"),
+                    tenant_id=payload.get("tenant_id", settings.DEFAULT_TENANT_ID),
+                    email=payload.get("email", ""),
+                    full_name=payload.get("name", ""),
+                    assigned_patient_ids=set(payload.get("assigned_patients", [])),
+                    can_access_all_patients_in_tenant=payload.get("role") in {"clinician", "admin", "care_coordinator"},
+                )
+                
             tenant_ctx = TenantContext(tenant_id=user_ctx.tenant_id)
             set_request_context(tenant_ctx, user_ctx)
             request.state.user = user_ctx

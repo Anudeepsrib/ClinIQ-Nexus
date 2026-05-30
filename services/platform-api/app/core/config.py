@@ -27,10 +27,16 @@ class Settings(BaseSettings):
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
 
-    # Auth (local mock mode)
+    # Auth (local mock mode or AWS Cognito)
     JWT_SECRET: str = "dev-jwt-secret-change-in-prod-please"
     JWT_ALGORITHM: str = "HS256"
     JWT_EXPIRE_MINUTES: int = 60 * 8  # 8 hours
+    
+    # AWS Cognito
+    AWS_REGION: str = "us-east-1"
+    COGNITO_USER_POOL_ID: str = ""
+    COGNITO_APP_CLIENT_ID: str = ""
+
 
     # CORS (tighten in production)
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]

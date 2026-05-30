@@ -11,6 +11,10 @@ from passlib.context import CryptContext
 
 from app.core.config import settings
 from app.core.context import UserContext
+import httpx
+import structlog
+
+logger = structlog.get_logger(__name__)
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -43,7 +47,59 @@ def create_access_token(
     return jwt.encode(to_encode, settings.JWT_SECRET, algorithm=settings.JWT_ALGORITHM)
 
 
+class CognitoJWKSVerifier:
+    def __init__(self):
+        self.jwks = None
+        self.jwks_url = f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.COGNITO_USER_POOL_ID}/.well-known/jwks.json"
+        self.last_fetch = 0
+
+    def get_jwks(self) -> Dict[str, Any]:
+        # Cache for 1 hour to avoid frequent network calls
+        if not self.jwks or time.time() - self.last_fetch > 3600:
+            if not settings.COGNITO_USER_POOL_ID:
+                raise ValueError("COGNITO_USER_POOL_ID is not configured")
+            response = httpx.get(self.jwks_url, timeout=5.0)
+            response.raise_for_status()
+            self.jwks = response.json()
+            self.last_fetch = time.time()
+        return self.jwks
+
+    def verify(self, token: str) -> Dict[str, Any]:
+        try:
+            unverified_header = jwt.get_unverified_header(token)
+            rsa_key = {}
+            for key in self.get_jwks().get("keys", []):
+                if key["kid"] == unverified_header.get("kid"):
+                    rsa_key = {
+                        "kty": key["kty"],
+                        "kid": key["kid"],
+                        "use": key["use"],
+                        "n": key["n"],
+                        "e": key["e"],
+                    }
+                    break
+
+            if not rsa_key:
+                raise ValueError("Unable to find appropriate key")
+
+            payload = jwt.decode(
+                token,
+                rsa_key,
+                algorithms=["RS256"],
+                audience=settings.COGNITO_APP_CLIENT_ID,
+                issuer=f"https://cognito-idp.{settings.AWS_REGION}.amazonaws.com/{settings.COGNITO_USER_POOL_ID}"
+            )
+            return payload
+        except Exception as e:
+            logger.warning("cognito_jwt_verification_failed", error=str(e))
+            raise ValueError(f"Invalid Cognito token: {e}") from e
+
+cognito_verifier = CognitoJWKSVerifier()
+
 def decode_jwt(token: str) -> Dict[str, Any]:
+    if settings.USE_REAL_AWS:
+        return cognito_verifier.verify(token)
+    
     try:
         payload = jwt.decode(token, settings.JWT_SECRET, algorithms=[settings.JWT_ALGORITHM])
         return payload
