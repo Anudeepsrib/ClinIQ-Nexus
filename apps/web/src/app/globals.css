@@ -10,20 +10,72 @@ body {
   font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
 }
 
+/* Scrollbar (clinical dark theme) */
 .chat-container {
   scrollbar-width: thin;
   scrollbar-color: #475569 #1e2937;
 }
 
+.chat-container::-webkit-scrollbar {
+  width: 6px;
+}
+.chat-container::-webkit-scrollbar-thumb {
+  background-color: #475569;
+  border-radius: 3px;
+}
+
+/* Legacy banner (kept for compatibility) */
 .banner-safety {
   background: linear-gradient(90deg, #7f1d1d 0%, #450a0a 100%);
   border-left: 4px solid #ef4444;
 }
 
+/* Citations */
 .citation {
   @apply text-xs bg-slate-800 hover:bg-slate-700 transition-colors px-2 py-1 rounded cursor-pointer;
 }
 
+/* Review cards */
 .review-card {
   @apply border border-slate-700 bg-slate-900 rounded-xl p-4;
+}
+
+/* Sonner toast overrides for clinical dark aesthetic */
+.sonner-toaster [data-sonner-toast] {
+  background: #0f172a !important;
+  border: 1px solid #334155 !important;
+  color: #e2e8f0 !important;
+}
+
+.sonner-toaster [data-sonner-toast][data-type="success"] {
+  border-color: #166534 !important;
+}
+
+.sonner-toaster [data-sonner-toast][data-type="error"] {
+  border-color: #991b1b !important;
+}
+
+/* Focus states for accessibility */
+button:focus-visible,
+input:focus-visible,
+a:focus-visible {
+  outline: 2px solid #0284c8;
+  outline-offset: 2px;
+}
+
+/* Clinical safety callout */
+.safety-callout {
+  @apply bg-red-950/60 border border-red-900/60 rounded-xl p-3 text-xs text-red-300;
+}
+
+/* Loading skeleton */
+.skeleton {
+  @apply animate-pulse bg-slate-800 rounded;
+}
+
+/* Responsive sidebar behavior helper */
+@media (max-width: 1024px) {
+  .desktop-sidebar {
+    display: none;
+  }
 }
