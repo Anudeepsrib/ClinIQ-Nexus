@@ -97,7 +97,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     email=payload.get("email", ""),
                     full_name=payload.get("name", payload.get("given_name", "") + " " + payload.get("family_name", "")).strip(),
                     assigned_patient_ids=set(assigned_patients),
-                    can_access_all_patients_in_tenant=role in {"clinician", "admin", "care_coordinator"},
+                    can_access_all_patients_in_tenant=role in {"clinician", "care_coordinator"},
                 )
             else:
                 user_ctx = UserContext(
@@ -107,7 +107,7 @@ class AuthMiddleware(BaseHTTPMiddleware):
                     email=payload.get("email", ""),
                     full_name=payload.get("name", ""),
                     assigned_patient_ids=set(payload.get("assigned_patients", [])),
-                    can_access_all_patients_in_tenant=payload.get("role") in {"clinician", "admin", "care_coordinator"},
+                    can_access_all_patients_in_tenant=payload.get("role") in {"clinician", "care_coordinator"},
                 )
                 
             tenant_ctx = TenantContext(tenant_id=user_ctx.tenant_id)
