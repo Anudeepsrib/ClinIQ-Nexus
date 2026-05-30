@@ -4,9 +4,10 @@ Memory Audit - Records every memory decision for compliance.
 
 from __future__ import annotations
 
-from typing import Any, Dict
 from datetime import datetime
 import uuid
+
+MEMORY_AUDIT_EVENTS: list[dict] = []
 
 
 class MemoryAuditService:
@@ -26,6 +27,22 @@ class MemoryAuditService:
     ) -> str:
         audit_id = f"mem_audit_{uuid.uuid4().hex[:12]}"
 
-        # In production this writes to audit_events table with event_type = "memory_decision"
+        MEMORY_AUDIT_EVENTS.append({
+            "audit_id": audit_id,
+            "tenant_id": tenant_id,
+            "user_id": user_id,
+            "decision": decision,
+            "candidate_content": candidate_content,
+            "minimized_content": minimized_content,
+            "reason": reason,
+            "policy_tags": policy_tags,
+            "created_at": datetime.utcnow().isoformat(),
+        })
 
         return audit_id
+
+    async def get_memory_audit(self, audit_or_memory_id: str) -> list[dict]:
+        return [
+            event for event in MEMORY_AUDIT_EVENTS
+            if event["audit_id"] == audit_or_memory_id or audit_or_memory_id in str(event)
+        ]

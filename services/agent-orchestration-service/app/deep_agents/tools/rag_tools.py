@@ -10,14 +10,14 @@ from __future__ import annotations
 from typing import Any, Dict, List
 import asyncio
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from ..base_deep_agent import DeepAgentContext
 
 # Bridge to real RAG service
 import sys
 from pathlib import Path
-PLATFORM_API_ROOT = Path(__file__).resolve().parents[6] / "platform-api"
+PLATFORM_API_ROOT = Path(__file__).resolve().parents[4] / "platform-api"
 if str(PLATFORM_API_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_API_ROOT))
 
@@ -44,11 +44,17 @@ class GovernedRAGTool(BaseTool):
         "Never use for raw or unauthorized data."
     )
     args_schema: type[BaseModel] = GovernedRAGInput
+    _context: DeepAgentContext = PrivateAttr()
+    _mcp: Any = PrivateAttr(default=None)
 
     def __init__(self, context: DeepAgentContext):
         super().__init__()
-        self.context = context
+        self._context = context
         self._mcp = MCPContextGovernanceService() if MCPContextGovernanceService else None
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
 
     async def _arun(self, query: str, doc_types: List[str] = None, **kwargs: Any) -> List[Dict[str, Any]]:
         if not REAL_RAG_AVAILABLE or not retrieve_authorized_chunks:

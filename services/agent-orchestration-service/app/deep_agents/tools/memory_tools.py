@@ -12,17 +12,17 @@ import asyncio
 import sys
 from pathlib import Path
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from ..base_deep_agent import DeepAgentContext
 
-# Bridge to real Hindsight Memory service
-MEMORY_SERVICE_ROOT = Path(__file__).resolve().parents[6] / "memory-service"
-if str(MEMORY_SERVICE_ROOT) not in sys.path:
-    sys.path.insert(0, str(MEMORY_SERVICE_ROOT))
+# Bridge to real Hindsight Memory service.
+REPO_ROOT = Path(__file__).resolve().parents[5]
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 try:
-    from app.services.hindsight_memory_service import HindsightMemoryService
+    from services.memory_service.app.services.hindsight_memory_service import HindsightMemoryService
     REAL_MEMORY_SERVICE = HindsightMemoryService()
 except Exception:
     REAL_MEMORY_SERVICE = None
@@ -39,10 +39,15 @@ class RetrieveGovernedMemoryTool(BaseTool):
         "Only safe, governed memories are returned."
     )
     args_schema: type[BaseModel] = RetrieveGovernedMemoryInput
+    _context: DeepAgentContext = PrivateAttr()
 
     def __init__(self, context: DeepAgentContext):
         super().__init__()
-        self.context = context
+        self._context = context
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
 
     async def _arun(self, query: str, **kwargs: Any) -> List[Dict[str, Any]]:
         if not REAL_MEMORY_SERVICE:
@@ -71,10 +76,15 @@ class ProposeMemoryCandidateTool(BaseTool):
         "(PHI minimization, sensitivity classification, role/consent checks). Only approved memories are stored."
     )
     args_schema: type[BaseModel] = ProposeMemoryCandidateInput
+    _context: DeepAgentContext = PrivateAttr()
 
     def __init__(self, context: DeepAgentContext):
         super().__init__()
-        self.context = context
+        self._context = context
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
 
     async def _arun(self, content: str, memory_type: str, **kwargs: Any) -> Dict[str, Any]:
         if not REAL_MEMORY_SERVICE:
@@ -97,3 +107,105 @@ class ProposeMemoryCandidateTool(BaseTool):
 
     def _run(self, content: str, memory_type: str, **kwargs: Any) -> Dict[str, Any]:
         return asyncio.run(self._arun(content, memory_type))
+
+
+class ClassifyMemoryCandidateInput(BaseModel):
+    content: str = Field(..., description="Candidate memory text to classify before any write")
+    memory_type: str = Field(default="preference")
+
+
+class ClassifyMemoryCandidateTool(BaseTool):
+    name: str = "classify_memory_candidate"
+    description: str = "Classify a memory candidate for type, sensitivity, and clinical-source-of-truth risk."
+    args_schema: type[BaseModel] = ClassifyMemoryCandidateInput
+    _context: DeepAgentContext = PrivateAttr()
+
+    def __init__(self, context: DeepAgentContext):
+        super().__init__()
+        self._context = context
+
+    async def _arun(self, content: str, memory_type: str = "preference", **kwargs: Any) -> Dict[str, Any]:
+        if not REAL_MEMORY_SERVICE:
+            return {"memory_type": memory_type, "sensitivity_level": "unknown", "is_clinical": True}
+        return REAL_MEMORY_SERVICE.classifier.classify({"content": content, "memory_type": memory_type})
+
+    def _run(self, content: str, memory_type: str = "preference", **kwargs: Any) -> Dict[str, Any]:
+        return asyncio.run(self._arun(content, memory_type))
+
+
+class WriteApprovedMemoryInput(BaseModel):
+    content: str = Field(..., description="Candidate memory text. The service will re-govern before storing.")
+    memory_type: str = Field(default="preference")
+
+
+class WriteApprovedMemoryTool(BaseTool):
+    name: str = "write_approved_memory"
+    description: str = (
+        "Submit a memory candidate to the Hindsight Memory write pipeline. "
+        "The tool never writes raw content directly; governance may block it."
+    )
+    args_schema: type[BaseModel] = WriteApprovedMemoryInput
+    _context: DeepAgentContext = PrivateAttr()
+
+    def __init__(self, context: DeepAgentContext):
+        super().__init__()
+        self._context = context
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
+
+    async def _arun(self, content: str, memory_type: str = "preference", **kwargs: Any) -> Dict[str, Any]:
+        if not REAL_MEMORY_SERVICE:
+            return {"status": "blocked", "reason": "Hindsight Memory service not available"}
+        return await REAL_MEMORY_SERVICE.process_memory_candidate(
+            candidate={
+                "content": content,
+                "memory_type": memory_type,
+                "source_workflow_id": self.context.workflow_id,
+                "patient_id": self.context.patient_id,
+            },
+            user_role=self.context.role,
+            tenant_id=self.context.tenant_id,
+            user_id=self.context.user_id,
+        )
+
+    def _run(self, content: str, memory_type: str = "preference", **kwargs: Any) -> Dict[str, Any]:
+        return asyncio.run(self._arun(content, memory_type))
+
+
+class AuditMemoryEventInput(BaseModel):
+    decision: str = Field(..., description="approved | blocked | retrieved")
+    reason: str = Field(default="")
+
+
+class AuditMemoryEventTool(BaseTool):
+    name: str = "audit_memory_event"
+    description: str = "Write an audit event for a memory read, proposal, classification, or write decision."
+    args_schema: type[BaseModel] = AuditMemoryEventInput
+    _context: DeepAgentContext = PrivateAttr()
+
+    def __init__(self, context: DeepAgentContext):
+        super().__init__()
+        self._context = context
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
+
+    async def _arun(self, decision: str, reason: str = "", **kwargs: Any) -> Dict[str, Any]:
+        if not REAL_MEMORY_SERVICE:
+            return {"status": "audit_unavailable", "decision": decision}
+        audit_id = await REAL_MEMORY_SERVICE.audit.log_memory_decision(
+            tenant_id=self.context.tenant_id,
+            user_id=self.context.user_id,
+            decision=decision,
+            candidate_content=None,
+            minimized_content=None,
+            reason=reason,
+            policy_tags=["deep_agent_memory_tool"],
+        )
+        return {"status": "audited", "audit_id": audit_id, "decision": decision}
+
+    def _run(self, decision: str, reason: str = "", **kwargs: Any) -> Dict[str, Any]:
+        return asyncio.run(self._arun(decision, reason))

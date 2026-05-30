@@ -56,6 +56,8 @@ async def approve(review_id: str, action: ReviewAction, user=Depends(get_current
 async def reject(review_id: str, action: ReviewAction, user=Depends(get_current_user)):
     for r in REVIEW_QUEUE:
         if r["id"] == review_id:
+            if r["tenant_id"] != get_current_tenant().tenant_id:
+                raise ForbiddenError("Cross-tenant access denied")
             r["status"] = "rejected"
             r["resolved_by"] = user.user_id
             r["resolution_notes"] = action.notes or "Rejected"
@@ -63,11 +65,30 @@ async def reject(review_id: str, action: ReviewAction, user=Depends(get_current_
     raise HTTPException(404, "Review task not found")
 
 
+@router.post("/{review_id}/revise")
+async def revise(review_id: str, action: ReviewAction, user=Depends(get_current_user)):
+    for r in REVIEW_QUEUE:
+        if r["id"] == review_id:
+            if r["tenant_id"] != get_current_tenant().tenant_id:
+                raise ForbiddenError("Cross-tenant access denied")
+            r["status"] = "needs_revision"
+            r["resolved_by"] = user.user_id
+            r["resolution_notes"] = action.notes or "Needs revision"
+            return {"status": "needs_revision", "review": r}
+    raise HTTPException(404, "Review task not found")
+
+
 # Internal helper used by agents/workflows
-def create_review_task(task_type: str, patient_id: str, reason: str, assigned_to: str = "clinician") -> dict:
+def create_review_task(
+    task_type: str,
+    patient_id: str,
+    reason: str,
+    assigned_to: str = "clinician",
+    tenant_id: str = "tenant_hospital_a",
+) -> dict:
     task = {
         "id": f"rev_{uuid.uuid4().hex[:12]}",
-        "tenant_id": "tenant_hospital_a",
+        "tenant_id": tenant_id,
         "task_type": task_type,
         "status": "pending_review",
         "patient_id": patient_id,

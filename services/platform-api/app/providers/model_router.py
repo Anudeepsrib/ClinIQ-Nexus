@@ -47,6 +47,14 @@ class MockBedrockProvider:
             )
             requires_review = True
 
+        elif route == "simple_llm":
+            response = (
+                "Here is a general, non-record-specific explanation:\n\n"
+                f"{query.strip()}\n\n"
+                "I can explain general health concepts, but I do not have or use your medical records for this route. "
+                "This is not medical advice, diagnosis, or treatment guidance. For personal clinical questions, contact your care team."
+            )
+
         elif route == "simple_rag" and user_role == "patient":
             response = (
                 f"Here's a summary of your recent records in plain language:\n\n{context_text[:1200]}\n\n"

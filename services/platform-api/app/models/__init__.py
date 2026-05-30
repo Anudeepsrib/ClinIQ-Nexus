@@ -7,4 +7,4 @@ from .document import Document, DocumentChunk
 from .audit import AuditEvent, ConsentRecord
 from .conversation import Conversation, Message
 from .workflow import HumanReviewTask, AgentWorkflow, SafetyEvent
-from .memory import MemoryRecord
+from .memory import MemoryPolicyDecision, MemoryRecord

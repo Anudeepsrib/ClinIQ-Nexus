@@ -83,7 +83,7 @@ async def draft_summary(state: DischargeState) -> DischargeState:
     )
 
     # === NEW: Mandatory Deep Agent integration for complex discharge planning ===
-    if DeepAgentFactory and len(state["retrieved_context"]) > 4:
+    if DeepAgentFactory:
         deep_agent = DeepAgentFactory.create(
             route="discharge_planning",
             tenant_id=state["user"].tenant_id,

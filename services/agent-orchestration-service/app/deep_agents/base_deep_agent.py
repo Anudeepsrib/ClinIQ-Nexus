@@ -19,6 +19,11 @@ from typing import Any, Dict, List, Optional
 
 from langchain_core.tools import BaseTool
 
+try:
+    from deepagents import create_deep_agent
+except Exception:  # pragma: no cover - optional SDK in local reference envs
+    create_deep_agent = None
+
 
 @dataclass
 class DeepAgentContext:
@@ -88,6 +93,28 @@ class BaseDeepAgent(ABC):
             return
         self._tools.append(tool)
         self._allowed_tool_names.append(tool.name)
+
+    @property
+    def langchain_deepagents_sdk_available(self) -> bool:
+        """Whether the official LangChain Deep Agents SDK is installed."""
+        return create_deep_agent is not None
+
+    def build_langchain_deep_agent(self, system_prompt: str, model: Any = None) -> Any:
+        """
+        Build the official LangChain Deep Agent harness when the optional
+        `deepagents` package is installed.
+
+        Local tests use deterministic governed fallbacks so CI does not need
+        network/model credentials. Production deployments should install and
+        configure `deepagents` plus the Bedrock-backed chat model.
+        """
+        if create_deep_agent is None:
+            return None
+        return create_deep_agent(
+            model=model,
+            tools=self.allowed_tools,
+            system_prompt=system_prompt,
+        )
 
     @abstractmethod
     async def run(self, task: str, governed_context: List[Dict[str, Any]]) -> DeepAgentOutput:

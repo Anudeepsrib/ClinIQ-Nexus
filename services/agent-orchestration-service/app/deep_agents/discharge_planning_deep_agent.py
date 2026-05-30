@@ -55,6 +55,7 @@ class DischargePlanningDeepAgent(BaseDeepAgent):
     async def run(self, task: str, governed_context: List[Dict[str, Any]]) -> DeepAgentOutput:
         # In a full implementation we would use LangChain's agent executor with
         # the prompt + tools. For now we provide a high-quality structured version.
+        official_harness = self.build_langchain_deep_agent(DISCHARGE_PLANNING_DEEP_AGENT_PROMPT)
 
         # Simulated Deep Agent reasoning trace (in real version this would be actual LLM calls)
         findings = [
@@ -107,6 +108,7 @@ class DischargePlanningDeepAgent(BaseDeepAgent):
             safety_flags=["discharge_blockers_present"] if key_blockers else [],
             memory_candidates=[memory_candidate],
             sub_agent_steps=[
+                {"step": "harness", "action": "LangChain Deep Agents SDK available" if official_harness else "Governed deterministic fallback used"},
                 {"step": "planner", "action": "Identified missing insurance and final PT note"},
                 {"step": "executor", "action": "Queried governed documents via MCP-approved tools"},
                 {"step": "critic", "action": "Flagged 2 blockers requiring human review"},

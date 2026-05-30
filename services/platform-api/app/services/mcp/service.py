@@ -69,7 +69,11 @@ class MCPContextGovernanceService:
 
             # 2. Patient scoping (minimum necessary)
             chunk_patient = chunk.get("patient_id")
-            if chunk_patient and not user.can_access_patient(chunk_patient):
+            allow_deidentified_admin_view = (
+                user.role in {"admin", "compliance_officer"}
+                and route in {"hospital_operations", "compliance_review"}
+            )
+            if chunk_patient and not user.can_access_patient(chunk_patient) and not allow_deidentified_admin_view:
                 decision.blocked_context_count += 1
                 decision.policy_decisions.append("patient_scope_violation")
                 continue

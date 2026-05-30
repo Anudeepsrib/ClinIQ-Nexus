@@ -12,13 +12,17 @@ from typing import List, Dict, Any, Optional
 import sys
 from pathlib import Path
 
-# Bridge to the full mandatory Hindsight Memory implementation
-MEMORY_SERVICE_ROOT = Path(__file__).resolve().parents[5] / "memory-service"
-if str(MEMORY_SERVICE_ROOT) not in sys.path:
-    sys.path.insert(0, str(MEMORY_SERVICE_ROOT))
+REPO_ROOT = next(
+    (parent for parent in Path(__file__).resolve().parents if (parent / "services").exists()),
+    Path.cwd(),
+)
+if str(REPO_ROOT) not in sys.path:
+    sys.path.insert(0, str(REPO_ROOT))
 
 try:
-    from app.services.hindsight_memory_service import HindsightMemoryService as _FullHindsightService
+    from services.memory_service.app.services.hindsight_memory_service import (
+        HindsightMemoryService as _FullHindsightService,
+    )
     HAS_FULL_MEMORY = True
 except Exception:
     HAS_FULL_MEMORY = False

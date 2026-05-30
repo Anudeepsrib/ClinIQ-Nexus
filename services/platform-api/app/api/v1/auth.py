@@ -42,3 +42,8 @@ async def get_me(user=Depends(get_current_user)):
         tenant_id=user.tenant_id,
         assigned_patients=list(user.assigned_patient_ids),
     )
+
+
+@router.post("/logout")
+async def logout(user=Depends(get_current_user)):
+    return {"status": "logged_out", "user_id": user.user_id}

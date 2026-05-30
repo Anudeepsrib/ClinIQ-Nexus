@@ -9,12 +9,12 @@ import asyncio
 import sys
 from pathlib import Path
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from ..base_deep_agent import DeepAgentContext
 
 # Bridge to platform DB models
-PLATFORM_ROOT = Path(__file__).resolve().parents[6] / "platform-api"
+PLATFORM_ROOT = Path(__file__).resolve().parents[4] / "platform-api"
 if str(PLATFORM_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT))
 
@@ -37,10 +37,15 @@ class GetDocumentMetadataTool(BaseTool):
     name: str = "get_document_metadata"
     description: str = "Fetch metadata for a specific authorized document (title, type, author, date). Never returns clinical content."
     args_schema: type[BaseModel] = GetDocumentMetadataInput
+    _context: DeepAgentContext = PrivateAttr()
 
     def __init__(self, context: DeepAgentContext):
         super().__init__()
-        self.context = context
+        self._context = context
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
 
     async def _arun(self, document_id: str, **kwargs: Any) -> Dict[str, Any]:
         if not REAL_DB_AVAILABLE or not Document:

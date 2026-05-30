@@ -10,11 +10,11 @@ import uuid
 import sys
 from pathlib import Path
 from langchain_core.tools import BaseTool
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PrivateAttr
 
 from ..base_deep_agent import DeepAgentContext
 
-PLATFORM_ROOT = Path(__file__).resolve().parents[6] / "platform-api"
+PLATFORM_ROOT = Path(__file__).resolve().parents[4] / "platform-api"
 if str(PLATFORM_ROOT) not in sys.path:
     sys.path.insert(0, str(PLATFORM_ROOT))
 
@@ -38,10 +38,15 @@ class LogDeepAgentDecisionTool(BaseTool):
     name: str = "log_deep_agent_decision"
     description: str = "Log an important decision, finding, or anomaly from a Deep Agent for audit and compliance purposes."
     args_schema: type[BaseModel] = LogDeepAgentDecisionInput
+    _context: DeepAgentContext = PrivateAttr()
 
     def __init__(self, context: DeepAgentContext):
         super().__init__()
-        self.context = context
+        self._context = context
+
+    @property
+    def context(self) -> DeepAgentContext:
+        return self._context
 
     async def _arun(self, decision: str, confidence: float, flags: list[str] = None, **kwargs: Any) -> Dict[str, Any]:
         if not REAL_AUDIT_AVAILABLE or not AuditEvent:

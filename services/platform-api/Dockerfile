@@ -18,8 +18,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Install uv for fast dependency management (optional but recommended)
 RUN pip install --no-cache-dir uv
 
-# Copy dependency files first for better caching
-COPY pyproject.toml uv.lock* requirements*.txt* ./
+# Copy dependency files first for better caching. This Dockerfile is built from
+# the repository root so the platform can import sibling service packages.
+COPY services/platform-api/requirements.txt ./requirements.txt
 
 # Install dependencies
 RUN uv pip install --system -r requirements.txt 2>/dev/null || pip install -r requirements.txt || pip install \
@@ -45,8 +46,10 @@ RUN uv pip install --system -r requirements.txt 2>/dev/null || pip install -r re
     pypdf==5.0.* \
     python-dotenv==1.0.*
 
-# Copy application code
-COPY . .
+# Copy application code plus sibling service packages used by the platform API.
+COPY services/platform-api/ ./
+COPY services /workspace/services
+ENV PYTHONPATH="/app:/workspace"
 
 # Create non-root user
 RUN useradd --create-home --shell /bin/bash appuser && \

@@ -1,8 +1,10 @@
-# ClinIQ-Nexus
+# MediCore AI Platform
 
 **Enterprise-Grade, HIPAA-Compliant AI Platform for Hospitals and Health Systems**
 
-ClinIQ-Nexus is a production-grade reference implementation of a multi-tenant clinical AI platform. It demonstrates how hospitals can safely deploy large language models against sensitive patient data while enforcing strict clinical safety, privacy, consent, and governance controls.
+MediCore AI Platform is the governed hospital AI platform implemented in this repository. It can sit under a broader hospital application umbrella alongside existing hospital applications such as ClinIQ, ClinIQ-Nexus, and other healthcare tools. The current local product shell still uses some ClinIQ-Nexus labels while the platform services use the MediCore architecture and governance model.
+
+This repository is a production-oriented reference implementation of a multi-tenant clinical AI platform. It demonstrates how hospitals can safely deploy large language models against sensitive patient data while enforcing strict clinical safety, privacy, consent, and governance controls.
 
 > **Critical Clinical Safety Rule**: This system **never** diagnoses, prescribes, or makes final clinical decisions. It summarizes, retrieves, flags risk signals, drafts for review, and always requires human oversight for safety-sensitive outputs.
 
@@ -98,6 +100,8 @@ This is a **reference-grade architectural implementation** designed for:
 - Educational purposes
 
 It is **not** a production deployment ready for real PHI without significant additional work (see [DEPLOYMENT.md](docs/DEPLOYMENT.md) and PRODUCTION_TODO comments).
+
+See [GAP_CLOSURE_STATUS.md](docs/GAP_CLOSURE_STATUS.md) for the latest implementation-hardening status and remaining production work.
 
 ## License & Compliance Notice
 

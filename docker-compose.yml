@@ -35,8 +35,8 @@ services:
 
   platform-api:
     build:
-      context: ./services/platform-api
-      dockerfile: Dockerfile
+      context: .
+      dockerfile: services/platform-api/Dockerfile
     container_name: cliniq-api
     environment:
       - DATABASE_URL=postgresql+asyncpg://cliniq:cliniq_dev_password@postgres:5432/cliniq_nexus
@@ -55,6 +55,7 @@ services:
         condition: service_healthy
     volumes:
       - ./services/platform-api:/app
+      - ./services:/workspace/services
       - ./data:/app/data
     networks:
       - cliniq-network

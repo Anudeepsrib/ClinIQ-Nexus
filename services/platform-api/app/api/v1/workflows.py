@@ -156,6 +156,11 @@ async def risk_signal_detection(req: WorkflowRequest, user=Depends(get_current_u
     }
 
 
+@router.post("/safety-triage")
+async def safety_triage(req: WorkflowRequest, user=Depends(get_current_user)):
+    return await risk_signal_detection(req, user)
+
+
 # ============================================================
 # NEW: Complex workflows wired to mandatory Deep Agents
 # ============================================================

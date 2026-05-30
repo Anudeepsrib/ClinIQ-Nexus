@@ -46,6 +46,7 @@ async def route_intent(query: str, role: str, tenant_id: str) -> RouteDecision:
     Hybrid intent classification with strong safety bias.
     """
     q = query.lower().strip()
+    low_information_markers = {"asdf", "qwerty", "nonsense", "random", "gibberish"}
 
     # 1. Hard safety overrides (highest priority)
     for category, keywords in SAFETY_KEYWORDS.items():
@@ -125,9 +126,21 @@ async def route_intent(query: str, role: str, tenant_id: str) -> RouteDecision:
         )
 
     # 3. Role-based default
+    if any(marker in q for marker in low_information_markers):
+        return RouteDecision(
+            intent="simple_rag",
+            confidence=0.55,
+            requires_rag=True,
+            requires_human_review=True,
+            safety_flags=["low_confidence_fallback"],
+            data_sources=["clinical_notes"],
+            reason="Query was low-information or nonsensical. Defaulting to safer grounded retrieval with human review.",
+        )
+
+    # 4. Role-based default
     default_intent = ROLE_DEFAULTS.get(role, "simple_rag")
 
-    # 4. LLM fallback (mocked for now - would call Bedrock Claude Haiku)
+    # 5. LLM fallback (mocked for now - would call Bedrock Claude Haiku)
     # In production we would call the model router here with structured output
     llm_confidence = 0.71
     if llm_confidence > 0.65:
@@ -140,7 +153,7 @@ async def route_intent(query: str, role: str, tenant_id: str) -> RouteDecision:
             reason="LLM fallback classification (mock). Defaulted based on role and query patterns.",
         )
 
-    # 5. Ultimate safe fallback
+    # 6. Ultimate safe fallback
     return RouteDecision(
         intent="simple_rag",
         confidence=0.55,

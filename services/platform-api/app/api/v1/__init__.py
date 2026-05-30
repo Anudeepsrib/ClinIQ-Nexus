@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from . import auth, chat, documents, patients, workflows, reviews, audit
+from . import admin, auth, chat, documents, patients, workflows, reviews, audit, memory
 
 router = APIRouter()
 
@@ -11,3 +11,5 @@ router.include_router(chat.router, prefix="/ai", tags=["AI"])
 router.include_router(workflows.router, prefix="/workflows", tags=["Workflows"])
 router.include_router(reviews.router, prefix="/reviews", tags=["Human Review"])
 router.include_router(audit.router, prefix="/audit", tags=["Audit"])
+router.include_router(memory.router, prefix="/memory", tags=["Hindsight Memory"])
+router.include_router(admin.router, prefix="/admin", tags=["Admin"])

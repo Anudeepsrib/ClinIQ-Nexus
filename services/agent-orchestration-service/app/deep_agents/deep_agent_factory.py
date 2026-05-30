@@ -87,15 +87,22 @@ class DeepAgentFactory:
         """
         from .tools.rag_tools import GovernedRAGTool
         from .tools.memory_tools import (
+            AuditMemoryEventTool,
+            ClassifyMemoryCandidateTool,
             RetrieveGovernedMemoryTool,
             ProposeMemoryCandidateTool,
+            WriteApprovedMemoryTool,
         )
         from .tools.human_review_tools import CreateHumanReviewTaskTool
         from .tools.document_tools import GetDocumentMetadataTool
+        from .tools.audit_tools import LogDeepAgentDecisionTool
 
         # Base tools almost all Deep Agents get (but still governed)
         agent.register_tool(GovernedRAGTool(agent.context))
         agent.register_tool(ProposeMemoryCandidateTool(agent.context))
+        agent.register_tool(ClassifyMemoryCandidateTool(agent.context))
+        agent.register_tool(WriteApprovedMemoryTool(agent.context))
+        agent.register_tool(AuditMemoryEventTool(agent.context))
         agent.register_tool(CreateHumanReviewTaskTool(agent.context))
 
         # Route-specific tools

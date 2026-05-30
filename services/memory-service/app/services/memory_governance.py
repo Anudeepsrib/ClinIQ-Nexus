@@ -18,9 +18,28 @@ class MemoryGovernanceService:
         content = candidate.get("content", "").lower()
 
         # Hard blocks
-        blocked_keywords = ["diagnosis", "lab value", "medication", "dose", "critical", "abnormal", "psychotherapy"]
+        blocked_keywords = [
+            "diagnosis",
+            "diagnosed",
+            "lab value",
+            " lab ",
+            "troponin",
+            "potassium",
+            "creatinine",
+            "glucose",
+            "sodium",
+            "vital",
+            "medication",
+            "dose",
+            "critical",
+            "abnormal",
+            "atrial fibrillation",
+            "psychotherapy",
+            "supplement",
+            "treat",
+        ]
         for kw in blocked_keywords:
-            if kw in content:
+            if kw.strip() in content:
                 return {
                     "decision": "blocked",
                     "reason": f"Contains forbidden clinical content keyword: {kw}",
