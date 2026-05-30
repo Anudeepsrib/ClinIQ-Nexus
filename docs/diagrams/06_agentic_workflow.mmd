@@ -1,0 +1,22 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    Start[Trigger Workflow] --> Route{Intent Router}
+    Route -->|discharge_planning| Graph[LangGraph State Machine]
+    
+    Graph --> Retrieve[Retrieve via MCP]
+    Retrieve --> Analyze[Analyze Blockers + Readiness]
+    Analyze --> Draft[Draft Summary via ModelRouter]
+    Draft --> Gate{Human Review Required?}
+    
+    Gate -->|Yes| CreateTask[Create HumanReviewTask<br/>+ Checkpoint]
+    Gate -->|No| Return[Return Final Output]
+    
+    CreateTask --> Wait[Paused - Awaiting Human]
+    Wait -->|Approved| Continue[Resume Graph]
+    Wait -->|Rejected| Stop[Terminate with Audit]
+    
+    Continue --> Return
+    Return --> Audit[Write Audit + Memory Candidate]
+    
+    classDef gate fill:#450a0a,stroke:#f59e0b,color:#fff
+    class Gate,CreateTask,Wait gate

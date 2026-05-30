@@ -1,0 +1,23 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    Users[Clinicians / Patients / Nurses] --> CloudFront[CloudFront + WAF]
+    CloudFront --> ALB[Application Load Balancer]
+    
+    ALB --> ECS[ECS Fargate<br/>Platform API]
+    ALB --> Next[Next.js on ECS / Amplify]
+    
+    ECS --> RDS[(Amazon RDS<br/>PostgreSQL + pgvector)]
+    ECS --> OpenSearch[(Amazon OpenSearch)]
+    ECS --> Redis[(ElastiCache Redis)]
+    ECS --> S3[(S3 + KMS)]
+    ECS --> Bedrock[AWS Bedrock<br/>Claude + Titan]
+    
+    ECS --> Cognito[Amazon Cognito]
+    
+    subgraph Monitoring["Observability"]
+        CloudWatch[CloudWatch + X-Ray]
+        OTEL[OpenTelemetry]
+    end
+    
+    ECS --> CloudWatch
+    ECS --> OTEL

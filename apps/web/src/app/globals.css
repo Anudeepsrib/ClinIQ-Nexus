@@ -1,0 +1,29 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --clinical-blue: #0284c8;
+}
+
+body {
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.chat-container {
+  scrollbar-width: thin;
+  scrollbar-color: #475569 #1e2937;
+}
+
+.banner-safety {
+  background: linear-gradient(90deg, #7f1d1d 0%, #450a0a 100%);
+  border-left: 4px solid #ef4444;
+}
+
+.citation {
+  @apply text-xs bg-slate-800 hover:bg-slate-700 transition-colors px-2 py-1 rounded cursor-pointer;
+}
+
+.review-card {
+  @apply border border-slate-700 bg-slate-900 rounded-xl p-4;
+}

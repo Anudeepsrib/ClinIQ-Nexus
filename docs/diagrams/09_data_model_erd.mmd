@@ -1,0 +1,22 @@
+%%{init: {'theme': 'dark'}}%%
+erDiagram
+    TENANT ||--o{ USER : has
+    TENANT ||--o{ PATIENT : has
+    TENANT ||--o{ DOCUMENT : has
+    TENANT ||--o{ AUDIT_EVENT : has
+
+    PATIENT ||--o{ ENCOUNTER : has
+    PATIENT ||--o{ DOCUMENT : has
+    PATIENT ||--o{ CONSENT_RECORD : has
+
+    DOCUMENT ||--o{ DOCUMENT_CHUNK : contains
+
+    USER ||--o{ CONVERSATION : initiates
+    CONVERSATION ||--o{ MESSAGE : contains
+
+    HUMAN_REVIEW_TASK ||--o{ AGENT_WORKFLOW : controls
+
+    DOCUMENT_CHUNK }o--o{ MEMORY_RECORD : may_inform
+
+    AUDIT_EVENT }o--|| TENANT : scoped_to
+    SAFETY_EVENT }o--|| PATIENT : relates_to

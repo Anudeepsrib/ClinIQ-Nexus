@@ -1,0 +1,13 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    Upload[Document Upload<br/>S3 / Local] --> Validate[Validate + Malware Scan]
+    Validate --> Extract[Text Extraction<br/>pypdf / unstructured]
+    Extract --> Normalize[Normalize + Boilerplate Removal]
+    Normalize --> Detect[Document Type Detection]
+    Detect --> Chunk[High-Quality Clinical Chunking]
+    Chunk --> Metadata[Attach Rich Metadata<br/>tenant, patient, consent, sensitivity]
+    Metadata --> Embed[Generate Titan / Local Embeddings]
+    Embed --> StoreVector[(Amazon OpenSearch<br/>or pgvector)]
+    StoreVector --> StoreMeta[(RDS PostgreSQL)]
+    StoreMeta --> Audit[Write Audit Event]
+    Audit --> Metrics[Emit Ingestion Metrics]

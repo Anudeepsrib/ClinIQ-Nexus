@@ -1,0 +1,61 @@
+# syntax=docker/dockerfile:1
+FROM python:3.11-slim AS base
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1
+
+WORKDIR /app
+
+# System dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    libpq-dev \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install uv for fast dependency management (optional but recommended)
+RUN pip install --no-cache-dir uv
+
+# Copy dependency files first for better caching
+COPY pyproject.toml uv.lock* requirements*.txt* ./
+
+# Install dependencies
+RUN uv pip install --system -r requirements.txt 2>/dev/null || pip install -r requirements.txt || pip install \
+    fastapi==0.115.* \
+    uvicorn[standard]==0.30.* \
+    pydantic==2.9.* \
+    pydantic-settings==2.5.* \
+    sqlalchemy[asyncio]==2.0.* \
+    alembic==1.13.* \
+    asyncpg==0.29.* \
+    redis==5.0.* \
+    langchain==0.3.* \
+    langchain-core==0.3.* \
+    langgraph==0.2.* \
+    sentence-transformers==3.1.* \
+    pgvector==0.2.* \
+    python-jose[cryptography]==3.3.* \
+    passlib[bcrypt]==1.7.* \
+    python-multipart==0.0.12 \
+    structlog==24.4.* \
+    opentelemetry-api \
+    rapidfuzz==3.10.* \
+    pypdf==5.0.* \
+    python-dotenv==1.0.*
+
+# Copy application code
+COPY . .
+
+# Create non-root user
+RUN useradd --create-home --shell /bin/bash appuser && \
+    chown -R appuser:appuser /app
+USER appuser
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
+    CMD curl -f http://localhost:8000/health || exit 1
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]

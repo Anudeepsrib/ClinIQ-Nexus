@@ -1,0 +1,14 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    Query[Authenticated Query] --> Context[Extract Tenant + User + ABAC]
+    Context --> Authz[RBAC + ABAC + Consent Check]
+    Authz -->|Denied| Deny[403 Forbidden + Audit]
+    
+    Authz -->|Allowed| Filters[Build Metadata Filters<br/>tenant, patient, dept, date, sensitivity]
+    Filters --> Embed[Embed Query]
+    Embed --> Hybrid[Hybrid Search<br/>Vector + Keyword + Filters]
+    Hybrid --> Rerank[Reranking + Dedup]
+    Rerank --> MCP[MCP Governance Layer]
+    MCP --> LLM[Grounded LLM Generation<br/>+ Citations + Disclaimers]
+    LLM --> Audit[Full Audit Record]
+    LLM --> Response[Safe Response to User]

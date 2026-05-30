@@ -1,0 +1,25 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    A[User Query + Context] --> B[Intent Router Decision]
+    B --> C[Retrieve Candidate Chunks<br/>Vector + Metadata Filters]
+    C --> D{MCP Governance Engine}
+    
+    D --> E[Tenant Isolation Check]
+    E --> F[Patient ABAC Check]
+    F --> G[Consent Scope Validation]
+    G --> H[Role-Based Transformation<br/>Patient vs Clinician View]
+    H --> I[PHI Minimization + Redaction]
+    I --> J[Abnormal / Risk Signal Detection]
+    J --> K{High Risk or Low Confidence?}
+    
+    K -->|Yes| L[Flag for Human Review<br/>Create Review Task]
+    K -->|No| M[Inject Safety Disclaimers]
+    M --> N[Prepare Final Allowed Context + Citations]
+    
+    L --> O[Return to Workflow with Review Gate]
+    N --> O
+    
+    O --> P[LLM Generation<br/>Only Allowed Context Reaches Model]
+    
+    classDef critical fill:#7f1d1d,stroke:#ef4444,color:#fff
+    class D,E,F,G,H,I,J,K,L,M,N,O,P critical

@@ -1,0 +1,21 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TD
+    Start[LangGraph Node: Needs Deep Reasoning] --> Factory[DeepAgentFactory.create(route, context)]
+    Factory --> Agent[DischargePlanningDeepAgent / ChartDeepAgent / etc.]
+    
+    Agent --> Planner[Planner Step<br/>What information is missing?]
+    Planner --> Executor[Executor Step<br/>Call only allowed scoped tools]
+    Executor --> MCPCheck{MCP Governance<br/>on tool results?}
+    MCPCheck -->|Blocked| SafeFallback[Safe Fallback + Human Review Flag]
+    MCPCheck -->|Allowed| Critic[Critic Step<br/>Assess confidence + blockers]
+    
+    Critic --> Memory[Propose Memory Candidate<br/>(non-clinical only)]
+    Memory --> Governance[Memory Governance Service]
+    Governance -->|Approved| Write[Write to Hindsight Memory]
+    Governance -->|Blocked| AuditOnly[Audit the block only]
+    
+    Critic --> Output[Structured DeepAgentOutput]
+    Output --> LangGraph[Return to LangGraph with citations, flags, review requirement]
+    
+    classDef deep fill:#1e3a8a,stroke:#3b82f6,color:#fff
+    class Agent,Planner,Executor,Critic deep

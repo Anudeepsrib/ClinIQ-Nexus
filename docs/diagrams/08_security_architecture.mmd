@@ -1,0 +1,36 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph Perimeter["Perimeter Defense"]
+        WAF[AWS WAF]
+        Cognito[Amazon Cognito + MFA]
+        ALB[ALB + TLS 1.3]
+    end
+
+    subgraph Network["Network Isolation"]
+        VPC[Private VPC]
+        Subnets[Private Subnets Only]
+        Endpoints[VPC Endpoints<br/>for S3, Bedrock, RDS]
+    end
+
+    subgraph Data["Data Protection"]
+        KMS[KMS Encryption<br/>at Rest + in Transit]
+        RDS[RDS with Encryption + RLS]
+        S3[S3 + Bucket Policies + KMS]
+        OpenSearch[OpenSearch with Fine-Grained Access]
+    end
+
+    subgraph App["Application Layer"]
+        Middleware[Tenant + ABAC + Rate Limit Middleware]
+        MCP[MCP Governance]
+        Audit[Immutable Audit]
+    end
+
+    WAF --> Cognito
+    Cognito --> ALB
+    ALB --> Subnets
+    Subnets --> Middleware
+    Middleware --> MCP
+    MCP --> Audit
+
+    classDef secure fill:#052e16,stroke:#22c55e,color:#fff
+    class WAF,Cognito,ALB,Subnets,KMS,RDS,S3,OpenSearch,Middleware,MCP,Audit secure

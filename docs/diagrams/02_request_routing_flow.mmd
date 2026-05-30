@@ -1,0 +1,19 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    User[User Query] --> Auth[Auth + Tenant Middleware]
+    Auth --> Router[Intent Router<br/>Deterministic Rules + Safety Lexicon]
+    
+    Router -->|Safety Keyword| Triage[clinical_safety_triage]
+    Router -->|Lab/Results| RAG[simple_rag]
+    Router -->|Discharge| Discharge[discharge_planning]
+    Router -->|Uncertain| LLMFallback[LLM Classifier Fallback]
+    
+    Triage --> MCP[MCP Governance]
+    RAG --> MCP
+    Discharge --> MCP
+    
+    MCP -->|Blocked/High Risk| Human[Human Review Queue]
+    MCP -->|Allowed| Generate[Grounded Generation]
+    
+    Generate --> Audit[Full Audit Event]
+    Human --> Audit

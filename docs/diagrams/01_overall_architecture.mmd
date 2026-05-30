@@ -1,0 +1,52 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart TB
+    subgraph Frontend["Next.js Frontend (Role-Aware)"]
+        A[AI Chat Interface]
+        B[Human Review Queue]
+        C[Role Dashboards]
+        D[Workflow Triggers]
+    end
+
+    subgraph API["FastAPI Platform API"]
+        E[Auth + RBAC/ABAC Middleware]
+        F[Intent Router<br/>Deterministic + Safety + LLM Fallback]
+        G[MCP Context Governance<br/>Non-Bypassable Safety Layer]
+        H[RAG Service + pgvector/OpenSearch]
+        I[LangGraph Agents]
+        J[Human Review State Machine]
+        K[Memory Service (Governed)]
+        L[Audit Service]
+    end
+
+    subgraph External["AWS Production Services"]
+        M[AWS Bedrock<br/>Claude 3.5 + Titan]
+        N[Amazon OpenSearch]
+        O[RDS PostgreSQL]
+        P[S3 + KMS]
+        Q[Cognito + WAF]
+        R[ElastiCache Redis]
+    end
+
+    A --> E
+    B --> J
+    D --> I
+
+    E --> F
+    F --> G
+    G --> H
+    G --> I
+    I --> J
+    H --> G
+    K --> G
+    J --> L
+    I --> L
+    G --> L
+
+    H -.-> N
+    H -.-> O
+    I -.-> M
+    K -.-> O
+    L -.-> P
+
+    classDef safety fill:#450a0a,stroke:#ef4444,color:#fff
+    class G,J safety

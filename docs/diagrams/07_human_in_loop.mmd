@@ -1,0 +1,23 @@
+%%{init: {'theme': 'dark'}}%%
+stateDiagram-v2
+    [*] --> Running: Agent/Workflow Starts
+    Running --> EvaluateRisk: After MCP + Generation
+    EvaluateRisk --> PendingReview: Medium/High Risk OR Missing Info OR Low Confidence
+    EvaluateRisk --> Completed: Low Risk + High Confidence + No Blockers
+    
+    PendingReview --> Approved: Human Approves
+    PendingReview --> Rejected: Human Rejects
+    PendingReview --> NeedsRevision: Human Requests Changes
+    
+    Approved --> Completed
+    NeedsRevision --> Running: Agent Re-runs with Feedback
+    Rejected --> Terminated
+    
+    Completed --> [*]
+    Terminated --> [*]
+    
+    note right of PendingReview
+      Human Review Task created
+      in DB with full context snapshot.
+      Workflow is checkpointed.
+    end note

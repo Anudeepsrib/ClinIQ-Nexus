@@ -1,0 +1,18 @@
+%%{init: {'theme': 'dark'}}%%
+flowchart LR
+    Candidate[Memory Candidate<br/>from Chat or Deep Agent] --> Extract[Memory Extractor]
+    Extract --> Classify[Memory Classifier<br/>type + sensitivity]
+    Classify --> Govern[Memory Governance Service]
+    
+    Govern --> PHI{PHI / Clinical<br/>Content Detected?}
+    PHI -->|Yes| Block[Block + Audit]
+    PHI -->|No| RoleCheck{Role + Consent<br/>Allowed?}
+    
+    RoleCheck -->|No| Block
+    RoleCheck -->|Yes| Minimize[PHI Minimization + Minimized Text]
+    Minimize --> Store[(Hindsight Memory<br/>memory_records)]
+    
+    Store --> Audit[Write Memory Policy Decision + Audit Event]
+    
+    classDef block fill:#7f1d1d,stroke:#ef4444,color:#fff
+    class Block block
