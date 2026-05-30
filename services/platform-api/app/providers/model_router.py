@@ -9,6 +9,7 @@ from __future__ import annotations
 
 from typing import Any, Dict, List, Optional
 from app.core.config import settings
+from app.providers.bedrock_provider import BedrockProvider
 
 
 class MockBedrockProvider:
@@ -95,7 +96,10 @@ class MockBedrockProvider:
 
 class ModelRouter:
     def __init__(self):
-        self.provider = MockBedrockProvider()
+        if settings.USE_REAL_AWS:
+            self.provider = BedrockProvider()
+        else:
+            self.provider = MockBedrockProvider()
 
     async def generate(self, **kwargs) -> Dict[str, Any]:
         return await self.provider.generate_safe_response(**kwargs)
