@@ -20,9 +20,23 @@ jobs:
           pip install -r requirements.txt
           pip install pytest ruff
       - name: Lint
-        run: ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory-service/app services/agent-orchestration-service/app tests
+        run: ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory_service/app services/agent_orchestration_service/app tests
       - name: Type check (basic)
-        run: cd services/platform-api && python -c "import app.main; print('Imports OK')"
+        run: |
+          cd services/platform-api
+          PYTHONPATH=".:/workspace" python -c "
+import app.main
+print('platform-api main: OK')
+
+# Explicitly exercise the sibling service imports that were previously broken by hyphen dirs
+from services.agent_orchestration_service.app.deep_agents.deep_agent_factory import DeepAgentFactory
+print('agent_orchestration_service (Deep Agents): OK')
+
+from services.memory_service.app.services.hindsight_memory_service import HindsightMemoryService
+print('memory_service (Hindsight Memory): OK')
+
+print('Imports OK')
+"
       - name: Run critical tests
         run: python -m pytest tests/ -v
 

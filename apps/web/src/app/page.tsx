@@ -32,6 +32,7 @@ export default function MediCoreClinicalPlatform() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [isChatLoading, setIsChatLoading] = useState(false);
   const [workflowResult, setWorkflowResult] = useState<any>(null);
+  const [chatPrefill, setChatPrefill] = useState<string | undefined>();
 
   const token = auth.token;
   const currentUser = auth.demoUser;
@@ -176,16 +177,13 @@ export default function MediCoreClinicalPlatform() {
 
   const loadExampleQuery = () => {
     const example = EXAMPLE_QUERIES[effectiveRole] || EXAMPLE_QUERIES.patient;
-    // We can't directly set input in child, so we just switch to chat and let user see it
     setActiveTab('chat');
-    // A nicer pattern would be to lift input state, but for now we show toast + switch
-    toast.info('Example loaded — press Send or edit the prompt');
-    // In a real refactor we would expose a "prefillQuery" prop
-    // For now we append a system hint
-    setMessages((prev) => [
-      ...prev,
-      { type: 'system', content: `Example prompt for ${effectiveRole}: "${example}"` },
-    ]);
+    setChatPrefill(example);
+    toast.success('Example prompt loaded');
+  };
+
+  const handlePrefillConsumed = () => {
+    setChatPrefill(undefined);
   };
 
   const isLoading = isChatLoading || runWorkflowMutation.isPending;
@@ -234,6 +232,8 @@ export default function MediCoreClinicalPlatform() {
               isLoading={isChatLoading}
               onSend={handleSendMessage}
               placeholder="Ask anything (labs, discharge planning, chest pain concern, general medical question...)"
+              prefill={chatPrefill}
+              onPrefillConsumed={handlePrefillConsumed}
             />
           )}
 

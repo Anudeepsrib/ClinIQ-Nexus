@@ -52,7 +52,7 @@ Last updated: 2026-05-30
 ## Current Verification
 
 - `python -m pytest -q` passes: 30 tests.
-- `ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory-service/app services/agent-orchestration-service/app tests` passes.
+- `ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory_service/app services/agent_orchestration_service/app tests` passes.
 - `python -c "import app.main; print('backend import ok')"` passes from `services/platform-api`.
 - `npm run build` passes from `apps/web`.
 - Native Terraform verification could not be executed in this local shell because neither `terraform` nor `tofu` is installed.

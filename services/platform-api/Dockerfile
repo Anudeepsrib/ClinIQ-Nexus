@@ -26,7 +26,7 @@ COPY services/platform-api/requirements.txt ./requirements.txt
 RUN uv pip install --system -r requirements.txt 2>/dev/null || pip install -r requirements.txt || pip install \
     fastapi==0.115.* \
     uvicorn[standard]==0.30.* \
-    pydantic==2.9.* \
+    pydantic[email]==2.9.* \
     pydantic-settings==2.5.* \
     sqlalchemy[asyncio]==2.0.* \
     alembic==1.13.* \

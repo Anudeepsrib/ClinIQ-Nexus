@@ -23,11 +23,29 @@ interface ChatInterfaceProps {
   isLoading: boolean;
   onSend: (query: string) => Promise<void>;
   placeholder?: string;
+  /** Optional: externally controlled prefill value (e.g. from "Load example" button) */
+  prefill?: string;
+  onPrefillConsumed?: () => void;
 }
 
-export function ChatInterface({ messages, isLoading, onSend, placeholder }: ChatInterfaceProps) {
+export function ChatInterface({ 
+  messages, 
+  isLoading, 
+  onSend, 
+  placeholder, 
+  prefill, 
+  onPrefillConsumed 
+}: ChatInterfaceProps) {
   const [query, setQuery] = useState('');
   const scrollRef = useRef<HTMLDivElement>(null);
+
+  // Support external "Load example" buttons
+  useEffect(() => {
+    if (prefill) {
+      setQuery(prefill);
+      onPrefillConsumed?.();
+    }
+  }, [prefill]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
