@@ -8,6 +8,7 @@ Last updated: 2026-05-30
 - Made Deep Agent tools instantiate correctly with LangChain `BaseTool`/Pydantic internals.
 - Wired `DeepAgentFactory` audit/memory tools and made discharge planning invoke the Deep Agent path.
 - Added an adapter in `BaseDeepAgent` for the official LangChain `deepagents.create_deep_agent` harness when the optional SDK and production model are installed.
+- Pinned and verified the official `deepagents` SDK path with a compatible LangChain/LangGraph set: `deepagents==0.5.0`, `langchain==1.2.18`, `langchain-core==1.4.0`, `langgraph==1.1.10`, `langgraph-checkpoint==3.0.1`, and `langgraph-prebuilt==1.0.13`.
 - Added missing Hindsight Memory service package files, standalone FastAPI routes, schemas, models, and platform `/api/v1/memory/*` endpoints.
 - Expanded memory schema with governed memory fields and `memory_policy_decisions`.
 - Fixed memory repository fallback behavior so tests and local runs do not require a running Postgres instance.
@@ -34,22 +35,24 @@ Last updated: 2026-05-30
 - Added focused regression tests for production auth hardening, runtime config validation, and MCP prompt-injection blocking.
 - Updated Docker build context so platform-api can import sibling service packages.
 - Updated CI so critical tests, Terraform validation, frontend build, and critical Ruff checks are no longer silently ignored.
+- Implemented the Terraform stack beyond VPC: KMS, security groups, VPC endpoints, S3 document/audit buckets, RDS PostgreSQL, ElastiCache Redis, OpenSearch, Cognito, ECS Fargate/ECR/ALB, IAM task roles, Secrets Manager, SQS, EventBridge, WAF, API Gateway, CloudWatch logs/dashboards, and CloudTrail.
+- Wired dev, stage, and prod Terraform environments to the full module set with encrypted storage, private networking, service-scoped IAM, database credentials injected from Secrets Manager, and CloudTrail S3 data-event logging.
 
 ## Still Not Production-Complete
 
 - Cognito/JWKS validation is implemented in code, but live Cognito pool configuration, MFA policy verification, and end-to-end AWS token tests remain needed before production.
-- The official `deepagents` SDK is adapter-supported but not pinned into the local requirements because the current repo still pins older LangChain versions.
 - Bedrock Claude/Titan providers and OpenSearch hybrid retrieval now have real-client paths behind `USE_REAL_AWS`, but they still need live AWS integration tests, IAM hardening, and production index validation.
-- Terraform modules beyond VPC are still not fully implemented.
+- Terraform now has full module coverage for the requested AWS stack, but it still needs live `terraform plan/apply` validation in a real AWS account, remote state/locking configuration, Route 53/custom-domain automation, and final account-specific CIDR/domain/secrets values.
 - Frontend remains a single consolidated demo experience, not the full required multi-page hospital application.
 - Document ingestion still needs full S3 upload, malware scanning, extraction, boilerplate removal, Titan embedding, and OpenSearch indexing.
 - Review tasks are DB-backed with a local fallback; full DB-backed workflow state transitions and reviewer assignment workflows still need expansion.
-- OpenTelemetry, CloudWatch dashboards, CloudTrail, WAF, KMS, IAM least privilege, VPC endpoints, and AWS deployment automation remain incomplete.
+- OpenTelemetry app trace export, endpoint policy tightening, Route 53 automation, and AWS deployment promotion workflows remain incomplete.
 - Full security/load/frontend/infrastructure test suites remain incomplete.
 
 ## Current Verification
 
-- `python -m pytest -q` passes: 29 tests.
+- `python -m pytest -q` passes: 30 tests.
 - `ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory-service/app services/agent-orchestration-service/app tests` passes.
 - `python -c "import app.main; print('backend import ok')"` passes from `services/platform-api`.
 - `npm run build` passes from `apps/web`.
+- Native Terraform verification could not be executed in this local shell because neither `terraform` nor `tofu` is installed.

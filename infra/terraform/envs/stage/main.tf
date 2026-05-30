@@ -29,12 +29,12 @@ variable "project_name" {
 
 variable "environment" {
   type    = string
-  default = "dev"
+  default = "stage"
 }
 
 variable "vpc_cidr" {
   type    = string
-  default = "10.20.0.0/16"
+  default = "10.30.0.0/16"
 }
 
 variable "az_count" {
@@ -77,22 +77,22 @@ variable "alb_certificate_arn" {
 variable "alb_origin_url" {
   type        = string
   default     = ""
-  description = "Optional full ALB origin URL for API Gateway, for example https://api-origin.dev.example.com."
+  description = "Optional full ALB origin URL for API Gateway, for example https://api-origin.stage.example.com."
 }
 
 variable "callback_urls" {
   type    = list(string)
-  default = ["http://localhost:3000/api/auth/callback/cognito"]
+  default = ["https://stage.medicore.example.com/api/auth/callback/cognito"]
 }
 
 variable "logout_urls" {
   type    = list(string)
-  default = ["http://localhost:3000"]
+  default = ["https://stage.medicore.example.com"]
 }
 
 variable "cors_allowed_origins" {
   type    = list(string)
-  default = ["http://localhost:3000"]
+  default = ["https://stage.medicore.example.com"]
 }
 
 locals {
@@ -121,11 +121,11 @@ module "kms" {
 }
 
 module "security" {
-  source              = "../../modules/security"
-  project_name        = var.project_name
-  environment         = var.environment
-  vpc_id              = module.vpc.vpc_id
-  allowed_http_cidrs  = var.allowed_http_cidrs
+  source             = "../../modules/security"
+  project_name       = var.project_name
+  environment        = var.environment
+  vpc_id             = module.vpc.vpc_id
+  allowed_http_cidrs = var.allowed_http_cidrs
 }
 
 module "networking" {
@@ -159,8 +159,8 @@ module "opensearch" {
   subnet_ids        = module.vpc.private_subnet_ids
   security_group_id = module.security.opensearch_security_group_id
   kms_key_arn       = module.kms.key_arn
-  instance_type     = "t3.small.search"
-  instance_count    = 1
+  instance_type     = "t3.medium.search"
+  instance_count    = 2
 }
 
 module "rds" {
@@ -174,8 +174,8 @@ module "rds" {
   db_username         = var.db_username
   db_password         = var.db_password
   instance_class      = "db.t4g.medium"
-  allocated_storage   = 50
-  multi_az            = false
+  allocated_storage   = 100
+  multi_az            = true
 }
 
 module "redis" {
@@ -185,7 +185,7 @@ module "redis" {
   private_subnet_ids = module.vpc.private_subnet_ids
   security_group_id  = module.security.redis_security_group_id
   kms_key_arn        = module.kms.key_arn
-  node_type          = "cache.t4g.micro"
+  node_type          = "cache.t4g.small"
 }
 
 module "secrets" {
@@ -241,24 +241,24 @@ module "ecs" {
   log_group_name        = module.cloudwatch.api_log_group_name
   container_image       = var.platform_api_image
   certificate_arn       = var.alb_certificate_arn
-  desired_count         = 1
+  desired_count         = 2
   cpu                   = 1024
   memory                = 2048
 
   environment_variables = {
-    AWS_REGION             = var.aws_region
-    AUDIT_LOG_BUCKET       = module.s3.audit_bucket_id
-    COGNITO_APP_CLIENT_ID  = module.cognito.user_pool_client_id
-    COGNITO_REGION         = var.aws_region
-    COGNITO_USER_POOL_ID   = module.cognito.user_pool_id
-    ENVIRONMENT            = var.environment
-    OPENSEARCH_ENDPOINT    = "https://${module.opensearch.domain_endpoint}"
-    OTEL_SERVICE_NAME      = "medicore-platform-api"
-    REDIS_URL              = "rediss://${module.redis.primary_endpoint}:6379/0"
-    S3_DOCUMENT_BUCKET     = module.s3.documents_bucket_id
+    AUDIT_LOG_BUCKET        = module.s3.audit_bucket_id
+    AWS_REGION              = var.aws_region
+    COGNITO_APP_CLIENT_ID   = module.cognito.user_pool_client_id
+    COGNITO_REGION          = var.aws_region
+    COGNITO_USER_POOL_ID    = module.cognito.user_pool_id
+    ENVIRONMENT             = var.environment
+    OPENSEARCH_ENDPOINT     = "https://${module.opensearch.domain_endpoint}"
+    OTEL_SERVICE_NAME       = "medicore-platform-api"
+    REDIS_URL               = "rediss://${module.redis.primary_endpoint}:6379/0"
+    S3_DOCUMENT_BUCKET      = module.s3.documents_bucket_id
     SQS_INGESTION_QUEUE_URL = module.sqs.ingestion_queue_url
     SQS_WORKFLOW_QUEUE_URL  = module.sqs.workflow_queue_url
-    USE_REAL_AWS           = "true"
+    USE_REAL_AWS            = "true"
   }
 
   secret_environment_variables = {

@@ -32,9 +32,15 @@ RUN uv pip install --system -r requirements.txt 2>/dev/null || pip install -r re
     alembic==1.13.* \
     asyncpg==0.29.* \
     redis==5.0.* \
-    langchain==0.3.* \
-    langchain-core==0.3.* \
-    langgraph==0.2.* \
+    deepagents==0.5.* \
+    langchain==1.2.* \
+    langchain-anthropic==1.4.* \
+    langchain-core==1.4.* \
+    langchain-google-genai==4.2.* \
+    langgraph==1.1.* \
+    langgraph-checkpoint==3.0.* \
+    langgraph-prebuilt==1.0.* \
+    langsmith==0.8.* \
     sentence-transformers==3.1.* \
     pgvector==0.2.* \
     python-jose[cryptography]==3.3.* \
@@ -44,7 +50,8 @@ RUN uv pip install --system -r requirements.txt 2>/dev/null || pip install -r re
     opentelemetry-api \
     rapidfuzz==3.10.* \
     pypdf==5.0.* \
-    python-dotenv==1.0.*
+    python-dotenv==1.0.* \
+    httpx==0.28.*
 
 # Copy application code plus sibling service packages used by the platform API.
 COPY services/platform-api/ ./
