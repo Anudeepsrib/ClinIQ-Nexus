@@ -156,12 +156,14 @@ This is a **reference-grade architectural implementation** designed for:
 - Health system innovation teams evaluating clinical AI
 - Educational purposes
 
-It is **not** a production deployment ready for real PHI without significant additional work (see [DEPLOYMENT.md](docs/DEPLOYMENT.md) and PRODUCTION_TODO comments).
+It is **not** a production deployment ready for real PHI without significant additional work (see [DEPLOYMENT.md](docs/DEPLOYMENT.md) and live AWS account + clinical validation).
 
 See [GAP_CLOSURE_STATUS.md](docs/GAP_CLOSURE_STATUS.md) for the latest implementation-hardening status and remaining production work.
+Enterprise hardening pass applied (CI security, middleware timeouts/size/tenant, PHI redaction logging, Docker non-root + secret files, config validation, frontend CSP/auth/client sanitization, DB pool, etc.). See PRODUCTION_UPGRADE_PLAN.md Phase 5.
 
 **Deep technical guides:**
 - [Deep Agents & Hindsight Memory Integration](docs/deep-agents-and-hindsight-memory.html) — Architecture + code-level explanation with interactive diagrams.
+- [LinkedIn / Marketing Visual Deck](docs/MediCore_AI_Platform_LinkedIn.html) — Self-contained, beautiful single-file HTML with 4 production-accurate Mermaid block diagrams. Perfect for screenshots, carousels, or sharing the full visual story.
 
 ## License & Compliance Notice
 

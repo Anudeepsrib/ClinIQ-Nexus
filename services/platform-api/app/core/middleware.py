@@ -11,6 +11,7 @@ These run on EVERY request and are the primary enforcement points for:
 
 from __future__ import annotations
 
+import asyncio
 import time
 import uuid
 from typing import Callable, Awaitable
@@ -21,7 +22,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
 from app.core.config import settings
-from app.core.context import TenantContext, UserContext, set_request_context, clear_request_context
+from app.core.context import TenantContext, UserContext, set_request_context, clear_request_context, get_current_user
 from app.core.security import decode_jwt, create_demo_user_context
 from app.core.rate_limit import check_rate_limit
 
@@ -131,21 +132,6 @@ class AuthMiddleware(BaseHTTPMiddleware):
             clear_request_context()
 
 
-class TenantIsolationMiddleware(BaseHTTPMiddleware):
-    """
-    Hard enforcement that tenant_id from token matches resource access.
-    This is the foundation of multi-tenant isolation.
-    """
-
-    async def dispatch(
-        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
-    ) -> Response:
-        response = await call_next(request)
-        # Additional tenant checks can be added here for path parameters
-        # (e.g. /patients/{patient_id} must belong to current tenant)
-        return response
-
-
 class SecurityHeadersMiddleware(BaseHTTPMiddleware):
     """Adds browser and transport security headers to every API response."""
 
@@ -233,4 +219,120 @@ class RateLimitMiddleware(BaseHTTPMiddleware):
 
         response = await call_next(request)
         response.headers["X-RateLimit-Remaining"] = str(remaining)
+        return response
+
+
+class RequestSizeLimitMiddleware(BaseHTTPMiddleware):
+    """Enforce maximum request body size to prevent DoS / resource exhaustion."""
+
+    def __init__(self, app: Callable, max_bytes: int | None = None) -> None:
+        super().__init__(app)
+        if max_bytes is None:
+            from app.core.config import settings as _s
+            max_bytes = _s.MAX_REQUEST_BYTES
+        self.max_bytes = max_bytes
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        content_length = request.headers.get("content-length")
+        if content_length:
+            try:
+                size = int(content_length)
+                if size > self.max_bytes:
+                    return JSONResponse(
+                        status_code=413,
+                        content={
+                            "error": "payload_too_large",
+                            "message": f"Request body exceeds limit of {self.max_bytes} bytes",
+                            "max_bytes": self.max_bytes,
+                        },
+                    )
+            except ValueError:
+                pass  # Invalid header; let downstream handle
+        # Note: for chunked without length we rely on uvicorn/server limits too
+        return await call_next(request)
+
+
+class RequestTimeoutMiddleware(BaseHTTPMiddleware):
+    """Hard timeout per request to avoid hanging workers (enterprise reliability)."""
+
+    def __init__(self, app: Callable, timeout_seconds: float | None = None) -> None:
+        super().__init__(app)
+        if timeout_seconds is None:
+            from app.core.config import settings as _s
+            timeout_seconds = _s.REQUEST_TIMEOUT_SECONDS
+        self.timeout_seconds = timeout_seconds
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        correlation_id = getattr(request.state, "correlation_id", None)
+        try:
+            return await asyncio.wait_for(call_next(request), timeout=self.timeout_seconds)
+        except asyncio.TimeoutError:
+            logger.warning(
+                "request_timeout",
+                path=request.url.path,
+                method=request.method,
+                correlation_id=correlation_id,
+                timeout=self.timeout_seconds,
+            )
+            return JSONResponse(
+                status_code=504,
+                content={
+                    "error": "gateway_timeout",
+                    "message": "Request timed out. Please retry.",
+                    "correlation_id": correlation_id,
+                },
+            )
+
+
+class TenantIsolationMiddleware(BaseHTTPMiddleware):
+    """
+    Hard enforcement that tenant_id from token matches resource access.
+    This is the foundation of multi-tenant isolation.
+    Enhanced: inspects common path patterns for patient/tenant resources and enforces ABAC early.
+    """
+
+    # Paths that carry patient_id in path and should be validated
+    PATIENT_PATH_PATTERNS = ("/patients/", "/documents/", "/memory/", "/reviews/", "/workflows/")
+
+    async def dispatch(
+        self, request: Request, call_next: Callable[[Request], Awaitable[Response]]
+    ) -> Response:
+        # If context populated (Auth ran before us), perform early tenant + ABAC guard for sensitive paths.
+        # This provides belt-and-suspenders defense; endpoint Depends remain authoritative.
+        if hasattr(request.state, "user") and hasattr(request.state, "tenant"):
+            try:
+                user: UserContext = request.state.user
+                tenant: TenantContext = request.state.tenant
+                path = request.url.path
+                # Basic tenant match (future: parse path params for explicit tenant)
+                # For patient-scoped: rely on can_access_patient which is called in routers.
+                # Here we can reject obvious cross-tenant attempts if query params expose tenant_id mismatch.
+                q_tenant = request.query_params.get("tenant_id")
+                if q_tenant and q_tenant != tenant.tenant_id:
+                    logger.warning("tenant_isolation_violation", path=path, claimed=q_tenant, actual=tenant.tenant_id)
+                    return JSONResponse(
+                        status_code=403,
+                        content={"error": "tenant_isolation", "message": "Tenant mismatch in request"},
+                    )
+                # Patient ABAC pre-filter for paths known to be patient specific
+                if any(p in path for p in self.PATIENT_PATH_PATTERNS):
+                    pid = None
+                    # naive extract last path segment if looks like patient id
+                    parts = [p for p in path.split("/") if p]
+                    if len(parts) >= 2 and parts[-2] in {"patients", "patient"}:
+                        pid = parts[-1]
+                    if pid and not user.can_access_patient(pid) and not user.is_admin_role:
+                        logger.warning("patient_abac_block", user_id=user.user_id, patient_id=pid, path=path)
+                        return JSONResponse(
+                            status_code=403,
+                            content={"error": "forbidden", "message": "Insufficient access to patient resource"},
+                        )
+            except Exception as exc:
+                logger.debug("tenant_mw_check_skipped", error=str(exc))
+
+        response = await call_next(request)
         return response

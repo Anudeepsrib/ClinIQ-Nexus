@@ -22,8 +22,9 @@ This platform was designed from day one around HIPAA Privacy, Security, and Brea
 5. Real penetration testing + red team (prompt injection, retrieval poisoning, model extraction)
 6. Legal review of all patient-facing language
 7. Integration with real EHR via FHIR with proper consent management
+8. (Added) Run full SAST/DAST + container scans in CI with blocking policy; validate secret rotation + external secret store integration; load/chaos testing; signed SBOMs.
 
-This reference implementation gives you the **technical architecture** that makes the above controls practical and auditable.
+This reference implementation gives you the **technical architecture** that makes the above controls practical and auditable. Additional runtime hardening (redaction, timeouts, size limits, non-root, etc.) applied in hardening pass.
 
 ## Philosophy
 

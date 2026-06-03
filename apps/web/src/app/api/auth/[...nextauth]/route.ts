@@ -9,6 +9,26 @@ const authOptions: NextAuthOptions = {
       issuer: process.env.COGNITO_ISSUER || "",
     }),
   ],
+  secret: process.env.NEXTAUTH_SECRET || (process.env.NODE_ENV === "production" ? undefined : "dev-nextauth-secret-change-me"),
+  session: {
+    strategy: "jwt",
+    maxAge: 8 * 60 * 60, // 8 hours (align with backend JWT)
+    updateAge: 60 * 60,
+  },
+  jwt: {
+    maxAge: 8 * 60 * 60,
+  },
+  cookies: {
+    sessionToken: {
+      name: process.env.NODE_ENV === "production" ? "__Secure-next-auth.session-token" : "next-auth.session-token",
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: process.env.NODE_ENV === "production",
+      },
+    },
+  },
   callbacks: {
     async jwt({ token, account, profile }) {
       // Map Cognito roles and tenant info into the NextAuth token
@@ -32,7 +52,7 @@ const authOptions: NextAuthOptions = {
   },
   pages: {
     signIn: '/auth/signin',
-  }
+  },
 }
 
 const handler = NextAuth(authOptions)

@@ -57,8 +57,17 @@ export function ChatInterface({
   const handleSend = async () => {
     const trimmed = query.trim();
     if (!trimmed || isLoading) return;
-    
-    await onSend(trimmed);
+
+    // Client-side hardening: length bound + basic control char strip (defense in depth; backend MCP is authoritative)
+    const MAX_QUERY = 4000;
+    let safe = trimmed.slice(0, MAX_QUERY);
+    // Strip most control chars except \n \t
+    safe = safe.replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+    if (safe.length < trimmed.length) {
+      // silently truncated / sanitized
+    }
+
+    await onSend(safe);
     setQuery('');
   };
 
@@ -109,6 +118,7 @@ export function ChatInterface({
             className="flex-1 bg-slate-950 border border-slate-700 focus:border-[#0284c8] rounded-2xl px-5 py-3 text-sm outline-none placeholder:text-slate-600"
             disabled={isLoading}
             aria-label="Clinical query input"
+            maxLength={4000}
           />
           <button
             onClick={handleSend}

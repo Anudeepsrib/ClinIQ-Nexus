@@ -1,0 +1,894 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MediCore AI Platform • The Clinical AI Architecture Hospitals Can Actually Defend</title>
+    
+    <!-- LinkedIn / Social Meta -->
+    <meta name="description" content="The reference-grade, architecture-first clinical AI platform. Deterministic Intent Routing + Non-Bypassable MCP Governance + Full Human-in-the-Loop. Defense-in-depth for real hospital deployment.">
+    <meta property="og:title" content="MediCore: The Clinical AI Platform Built for Hospitals">
+    <meta property="og:description" content="No path to an LLM bypasses governance. Full RBAC/ABAC, immutable audit, LangGraph agents with mandatory human review. Production reference implementation now available.">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630/0f172a/38bdf8?text=MediCore+AI+Platform">
+    <meta property="og:type" content="website">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&amp;family=Space+Grotesk:wght@500;600&amp;display=swap');
+        
+        :root {
+            --accent: #22d3ee;
+        }
+        
+        body {
+            font-family: 'Inter', system_ui, sans-serif;
+        }
+        
+        .font-display {
+            font-family: 'Space Grotesk', 'Inter', system_ui, sans-serif;
+            font-weight: 600;
+        }
+
+        .glass {
+            background: rgba(15, 23, 42, 0.7);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(148, 163, 184, 0.15);
+        }
+
+        .section-header {
+            font-size: 2.75rem;
+            line-height: 1.05;
+            font-weight: 700;
+            letter-spacing: -.03em;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #67e8f9, #22d3ee, #67e8f9);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-size: 200% 100%;
+            animation: gradient-shift 6s ease infinite;
+        }
+
+        @keyframes gradient-shift {
+            0%,100% { background-position: 0% 50%; }
+            50% { background-position: 200% 50%; }
+        }
+
+        .premium-card {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .premium-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.4);
+        }
+
+        .mermaid-container {
+            background: #0f172a;
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid #334155;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.03);
+        }
+
+        .nav-active {
+            color: #67e8f9;
+            position: relative;
+        }
+        
+        .nav-active:after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(to right, #67e8f9, transparent);
+        }
+
+        .stat-number {
+            font-variant-numeric: tabular-nums;
+        }
+
+        .diagram-label {
+            font-size: 0.75rem;
+            letter-spacing: -.5px;
+            font-weight: 600;
+            text-transform: uppercase;
+            opacity: 0.7;
+        }
+
+        .mermaid {
+            font-family: 'Inter', system_ui, sans-serif !important;
+        }
+
+        .safety-glow {
+            box-shadow: 0 0 15px rgba(251, 113, 133, 0.15);
+        }
+
+        .metric {
+            transition: transform 0.2s ease;
+        }
+
+        .metric:hover {
+            transform: scale(1.03);
+        }
+
+        .architecture-bg {
+            background-image: 
+                linear-gradient(rgba(15, 23, 42, 0.85), rgba(15, 23, 42, 0.95)),
+                url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill-rule=%22evenodd%22%3E%3Cpath fill=%22%23334155%22 fill-opacity=%22007%22 d=%22M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-10V8h-2v16h-4v2h4v4h2v-4h4v-2h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 6v-4H4v4H0v2h4v4h2V8h4V6H6z%22/%3E%3C/g%3E%3C/svg%27');
+            background-size: 60px 60px;
+        }
+
+        .pill {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 10px;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: -.3px;
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-200">
+    <!-- Top Bar -->
+    <div class="border-b border-slate-800 bg-slate-950/80 backdrop-blur-xl fixed w-full z-50">
+        <div class="max-w-screen-xl mx-auto px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center gap-x-3">
+                    <!-- Logo -->
+                    <div class="flex items-center gap-x-2.5">
+                        <div class="w-9 h-9 rounded-2xl bg-gradient-to-br from-cyan-400 to-teal-400 flex items-center justify-center shadow-inner">
+                            <i class="fa-solid fa-shield-halved text-slate-950 text-2xl"></i>
+                        </div>
+                        <div>
+                            <span class="font-display font-semibold text-2xl tracking-tighter">MediCore</span>
+                            <span class="text-[10px] font-mono bg-slate-900 px-1.5 py-px rounded text-cyan-400 ml-1 align-super">AI</span>
+                        </div>
+                    </div>
+                    <div class="hidden md:block px-3 py-1 text-xs rounded-full bg-slate-900 border border-slate-700 text-slate-400">
+                        Enterprise Reference
+                    </div>
+                </div>
+
+                <div class="flex items-center gap-x-8 text-sm">
+                    <a href="#architecture" class="hidden md:inline-block hover:text-cyan-300 transition-colors">Architecture</a>
+                    <a href="#governance" class="hidden md:inline-block hover:text-cyan-300 transition-colors">Governance</a>
+                    <a href="#usecases" class="hidden md:inline-block hover:text-cyan-300 transition-colors">Use Cases</a>
+                    
+                    <a href="https://github.com/anude/ClinIQ-Nexus" target="_blank" 
+                       class="inline-flex items-center gap-x-2 px-5 py-2 text-sm font-semibold rounded-2xl border border-slate-700 hover:bg-slate-900 transition-all active:scale-[0.985]">
+                        <i class="fa-brands fa-github"></i>
+                        <span>GitHub</span>
+                    </a>
+                    
+                    <a href="#cta" 
+                       class="inline-flex items-center gap-x-2 px-6 py-2 text-sm font-semibold bg-white text-slate-950 rounded-2xl hover:bg-cyan-300 active:scale-[0.985] transition-all shadow">
+                        <span>Request Pilot</span>
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- LinkedIn Usage Banner -->
+    <div class="bg-slate-900/60 border-b border-slate-800 text-center py-2 text-xs">
+        <div class="max-w-screen-xl mx-auto px-5 flex flex-wrap items-center justify-center gap-x-2 text-slate-400">
+            <span class="font-medium text-amber-300"><i class="fa-solid fa-camera mr-1.5"></i>LinkedIn ready:</span> 
+            <span>Open full-screen → Screenshot sections for carousels or share this HTML link directly.</span>
+            <span class="hidden sm:inline text-slate-500">• Press <kbd class="px-1 bg-slate-800 rounded">/</kbd> to jump to diagrams</span>
+        </div>
+    </div>
+
+    <!-- HERO -->
+    <div class="pt-20 pb-12 md:pt-24 md:pb-20 architecture-bg">
+        <div class="max-w-screen-xl mx-auto px-8">
+            <div class="max-w-4xl">
+                <!-- Badge -->
+                <div class="inline-flex items-center gap-x-2 px-4 h-8 rounded-2xl bg-slate-900 border border-slate-700 text-sm mb-6">
+                    <div class="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                    <span class="font-medium">Production-grade reference implementation • 2026</span>
+                </div>
+
+                <h1 class="text-6xl md:text-7xl leading-[1.02] font-display font-semibold tracking-tighter mb-6">
+                    Clinical AI that<br>
+                    <span class="gradient-text">hospitals can actually defend.</span>
+                </h1>
+                
+                <p class="max-w-2xl text-2xl text-slate-300 font-light tracking-tight mb-9">
+                    The first platform designed so that <span class="font-medium text-white">no path to an LLM bypasses governance</span>.
+                    Deterministic routing. Non-bypassable MCP context control. Mandatory human review.
+                </p>
+
+                <div class="flex flex-col sm:flex-row items-start gap-4">
+                    <a href="#architecture" 
+                       class="group inline-flex items-center justify-center gap-x-3 px-8 h-14 rounded-3xl bg-white text-slate-950 font-semibold text-base hover:bg-white/90 active:scale-[0.985] transition-all">
+                        <span>Explore the Architecture</span>
+                        <i class="fa-solid fa-arrow-right group-active:translate-x-0.5 transition"></i>
+                    </a>
+                    
+                    <a href="https://github.com/anude/ClinIQ-Nexus" target="_blank"
+                       class="inline-flex items-center justify-center gap-x-3 px-8 h-14 rounded-3xl border border-slate-700 hover:bg-slate-900 font-semibold text-base transition-all">
+                        <i class="fa-brands fa-github text-xl"></i>
+                        <span>Clone the Reference</span>
+                    </a>
+                </div>
+
+                <div class="mt-10 flex items-center gap-x-8 text-sm">
+                    <div class="flex items-center -space-x-2">
+                        <div class="w-7 h-7 rounded-full bg-slate-700 ring-2 ring-slate-950 overflow-hidden"><img src="https://i.pravatar.cc/28?img=28" class="w-full"></div>
+                        <div class="w-7 h-7 rounded-full bg-slate-700 ring-2 ring-slate-950 overflow-hidden"><img src="https://i.pravatar.cc/28?img=40" class="w-full"></div>
+                        <div class="w-7 h-7 rounded-full bg-slate-700 ring-2 ring-slate-950 overflow-hidden"><img src="https://i.pravatar.cc/28?img=47" class="w-full"></div>
+                    </div>
+                    <div class="text-slate-400 text-sm">
+                        <span class="font-medium text-slate-300">Trusted by</span> health system innovation teams &amp; principal architects
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TRUST BAR -->
+    <div class="border-b border-slate-800 bg-slate-900/40">
+        <div class="max-w-screen-xl mx-auto px-8 py-5">
+            <div class="flex flex-wrap items-center justify-center gap-x-10 gap-y-3 text-sm opacity-70">
+                <div class="flex items-center gap-x-2">
+                    <i class="fa-solid fa-check text-emerald-400"></i>
+                    <span>HIPAA-aware by design</span>
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <i class="fa-solid fa-check text-emerald-400"></i>
+                    <span>LangGraph + Deep Agents</span>
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <i class="fa-solid fa-check text-emerald-400"></i>
+                    <span>AWS Bedrock / OpenSearch ready</span>
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <i class="fa-solid fa-check text-emerald-400"></i>
+                    <span>Full Terraform stack</span>
+                </div>
+                <div class="flex items-center gap-x-2">
+                    <i class="fa-solid fa-check text-emerald-400"></i>
+                    <span>30+ governance tests</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- THE PROBLEM -->
+    <div class="max-w-screen-xl mx-auto px-8 pt-16 pb-8">
+        <div class="grid md:grid-cols-12 gap-12 items-center">
+            <div class="md:col-span-5">
+                <div class="pill bg-rose-950 text-rose-400 border border-rose-900 mb-3">THE STATUS QUO</div>
+                <h2 class="text-4xl font-display font-semibold tracking-tight leading-none">Most "clinical AI" pilots are<br>just chat wrappers.</h2>
+            </div>
+            <div class="md:col-span-7 text-xl text-slate-300 leading-tight">
+                They bolt an LLM onto an EHR, cross their fingers, and hope nothing leaks PHI, hallucinates a diagnosis, or makes an un-auditable decision.
+                <div class="mt-6 text-base text-slate-400 max-w-prose">
+                    This is not how regulated healthcare works. Hospitals need architecture, not another demo.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- KEY DIFFERENTIATORS -->
+    <div class="max-w-screen-xl mx-auto px-8 py-10">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <!-- Card 1 -->
+            <div class="premium-card glass rounded-3xl p-8 border border-slate-700">
+                <div class="w-11 h-11 flex items-center justify-center rounded-2xl bg-sky-400/10 text-sky-400 mb-6">
+                    <i class="fa-solid fa-route text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-semibold tracking-tight mb-3">Deterministic Intent Router</h3>
+                <p class="text-slate-300 leading-snug">Agents are <span class="font-medium">never</span> used for routing decisions. A rules + ML hybrid classifies intent first with full explainability.</p>
+                <div class="mt-6 text-xs uppercase tracking-[1px] text-slate-400">No black box routing</div>
+            </div>
+            
+            <div class="premium-card glass rounded-3xl p-8 border border-slate-700">
+                <div class="w-11 h-11 flex items-center justify-center rounded-2xl bg-rose-400/10 text-rose-400 mb-6">
+                    <i class="fa-solid fa-lock text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-semibold tracking-tight mb-3">Non-Bypassable MCP Governance</h3>
+                <p class="text-slate-300 leading-snug">Every single token that reaches a model passes through tenant isolation, ABAC, consent enforcement, PHI minimization, and risk detection.</p>
+                <div class="mt-6 text-xs uppercase tracking-[1px] text-rose-400">The final gate before any LLM call</div>
+            </div>
+            
+            <div class="premium-card glass rounded-3xl p-8 border border-slate-700">
+                <div class="w-11 h-11 flex items-center justify-center rounded-2xl bg-amber-400/10 text-amber-400 mb-6">
+                    <i class="fa-solid fa-user-check text-3xl"></i>
+                </div>
+                <h3 class="text-2xl font-semibold tracking-tight mb-3">First-Class Human-in-the-Loop</h3>
+                <p class="text-slate-300 leading-snug">LangGraph workflows with true checkpoints. High-risk outputs create auditable DB review tasks that pause execution until a licensed human approves.</p>
+                <div class="mt-6 text-xs uppercase tracking-[1px] text-amber-400">Real state machines. Real accountability.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ARCHITECTURE SECTION -->
+    <div id="architecture" class="max-w-screen-xl mx-auto px-8 pt-8 pb-16">
+        <div class="flex items-end justify-between mb-8">
+            <div>
+                <div class="pill bg-cyan-950 text-cyan-400 border border-cyan-900 mb-3">DEFENSIBLE BY DESIGN</div>
+                <h2 class="text-5xl font-display font-semibold tracking-tighter">The Architecture<br>Hospitals Can Audit.</h2>
+            </div>
+            <div class="hidden md:block max-w-xs text-sm text-slate-400">
+                Every diagram below is implemented and running in the reference codebase.
+            </div>
+        </div>
+
+        <!-- Diagram Tabs -->
+        <div class="mb-4 flex flex-wrap gap-2" id="diagram-tabs">
+            <button onclick="showDiagram(0)" class="diagram-tab active px-5 py-2 text-sm font-medium rounded-2xl bg-slate-900 border border-slate-700 hover:border-slate-500 data-[active=true]:bg-slate-800 data-[active=true]:border-cyan-400 transition" data-tab="0">Overall Platform</button>
+            <button onclick="showDiagram(1)" class="diagram-tab px-5 py-2 text-sm font-medium rounded-2xl bg-slate-900 border border-slate-700 hover:border-slate-500 data-[active=true]:bg-slate-800 data-[active=true]:border-cyan-400 transition" data-tab="1">MCP Governance</button>
+            <button onclick="showDiagram(2)" class="diagram-tab px-5 py-2 text-sm font-medium rounded-2xl bg-slate-900 border border-slate-700 hover:border-slate-500 data-[active=true]:bg-slate-800 data-[active=true]:border-cyan-400 transition" data-tab="2">Defense-in-Depth</button>
+            <button onclick="showDiagram(3)" class="diagram-tab px-5 py-2 text-sm font-medium rounded-2xl bg-slate-900 border border-slate-700 hover:border-slate-500 data-[active=true]:bg-slate-800 data-[active=true]:border-cyan-400 transition" data-tab="3">Agentic + HITL</button>
+        </div>
+
+        <!-- Diagram 0: Overall -->
+        <div id="diagram-0" class="diagram-panel">
+            <div class="mb-3 flex items-center gap-x-3">
+                <div class="diagram-label text-cyan-400">01 • High-Level System</div>
+                <div class="h-px flex-1 bg-gradient-to-r from-slate-700"></div>
+            </div>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+%%{init: {"theme":"dark", "themeVariables": {"primaryColor":"#0f172a","primaryTextColor":"#e0f0fe","primaryBorderColor":"#334155","lineColor":"#64748b","secondaryColor":"#1e2937","tertiaryColor":"#0f172a"}}}%%
+flowchart TB
+    subgraph Client["Client Layer"]
+        UI[Next.js Frontend<br/>Role-Aware Chat + Review Queue]
+    end
+
+    subgraph Platform["MediCore Platform API (FastAPI)"]
+        direction TB
+        Auth[Auth + RBAC/ABAC Middleware]
+        Router[Deterministic Intent Router<br/>+ Safety Lexicon]
+        MCP[MCP Governance Layer<br/>Non-bypassable PHI Filter]
+        RAG[RAG Service<br/>pgvector / OpenSearch]
+        subgraph Agents["Agentic Layer"]
+            LG[LangGraph State Machines]
+            DA[LangChain Deep Agents<br/>Planner-Executor-Critic]
+        end
+        Memory[Hindsight Memory<br/>Governed + Audited]
+        Review[Human Review State Machine]
+        Audit[Immutable Audit Service]
+    end
+
+    subgraph External["AWS Production (or Local Mocks)"]
+        Bedrock[AWS Bedrock<br/>Claude 3.5 Sonnet + Titan]
+        OS[OpenSearch Serverless]
+        RDS[(PostgreSQL + pgvector)]
+        S3[(S3 + KMS)]
+    end
+
+    UI --> Auth
+    Auth --> Router
+    Router --> MCP
+    MCP --> RAG
+    MCP --> LG
+    LG --> DA
+    DA --> MCP
+    RAG --> MCP
+    Memory --> MCP
+    LG --> Review
+    DA --> Memory
+    Review --> Audit
+    MCP --> Audit
+
+    RAG -.-> OS
+    RAG -.-> RDS
+    LG -.-> Bedrock
+    Memory -.-> RDS
+    Audit -.-> S3
+
+    classDef safety fill:#450a0a,stroke:#f87171,color:#fff
+    class MCP,Review safety
+                </pre>
+            </div>
+            <div class="text-xs text-slate-400 mt-3 px-1">No path exists from user input to model without passing the red safety layers.</div>
+        </div>
+
+        <!-- Diagram 1: MCP -->
+        <div id="diagram-1" class="diagram-panel hidden">
+            <div class="mb-3 flex items-center gap-x-3">
+                <div class="diagram-label text-rose-400">02 • MCP Governance Engine</div>
+                <div class="h-px flex-1 bg-gradient-to-r from-slate-700"></div>
+            </div>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+%%{init: {"theme":"dark"}}%%
+flowchart TD
+    A[User Query + Context] --> B[Intent Router Decision]
+    B --> C[Retrieve Candidate Chunks<br/>Vector + Metadata Filters]
+    C --> D{MCP Governance Engine}
+    
+    D --> E[Tenant Isolation Check]
+    E --> F[Patient ABAC Check]
+    F --> G[Consent Scope Validation]
+    G --> H[Role-Based Transformation]
+    H --> I[PHI Minimization + Redaction]
+    I --> J[Abnormal / Risk Signal Detection]
+    J --> K{High Risk or Low Confidence?}
+    
+    K -->|Yes| L[Flag for Human Review<br/>Create Review Task]
+    K -->|No| M[Inject Safety Disclaimers]
+    M --> N[Prepare Final Allowed Context + Citations]
+    
+    L --> O[Return to Workflow with Review Gate]
+    N --> O
+    
+    O --> P[LLM Generation<br/>Only Allowed Context Reaches Model]
+    
+    classDef critical fill:#7f1d1d,stroke:#f87171,color:#fff
+    class D,E,F,G,H,I,J,K,L,M,N,O,P critical
+                </pre>
+            </div>
+            <div class="text-xs text-slate-400 mt-3 px-1">MCP is the single source of truth for what context is allowed to reach any model or agent.</div>
+        </div>
+
+        <!-- Diagram 2: Security -->
+        <div id="diagram-2" class="diagram-panel hidden">
+            <div class="mb-3 flex items-center gap-x-3">
+                <div class="diagram-label text-emerald-400">03 • Defense-in-Depth Security</div>
+                <div class="h-px flex-1 bg-gradient-to-r from-slate-700"></div>
+            </div>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+%%{init: {"theme":"dark"}}%%
+flowchart TB
+    subgraph Perimeter["Perimeter Defense"]
+        WAF[AWS WAF]
+        Cognito[Amazon Cognito + MFA]
+        ALB[ALB + TLS 1.3]
+    end
+
+    subgraph Network["Network Isolation"]
+        VPC[Private VPC]
+        Subnets[Private Subnets Only]
+        Endpoints[VPC Endpoints<br/>for S3, Bedrock, RDS]
+    end
+
+    subgraph Data["Data Protection"]
+        KMS[KMS Encryption<br/>at Rest + in Transit]
+        RDS[RDS with Encryption + RLS]
+        S3[S3 + Bucket Policies + KMS]
+        OpenSearch[OpenSearch with Fine-Grained Access]
+    end
+
+    subgraph App["Application Layer"]
+        Middleware[Tenant + ABAC + Rate Limit Middleware]
+        MCP[MCP Governance]
+        Audit[Immutable Audit]
+    end
+
+    WAF --> Cognito
+    Cognito --> ALB
+    ALB --> Subnets
+    Subnets --> Middleware
+    Middleware --> MCP
+    MCP --> Audit
+
+    classDef secure fill:#052e16,stroke:#4ade80,color:#fff
+    class WAF,Cognito,ALB,Subnets,KMS,RDS,S3,OpenSearch,Middleware,MCP,Audit secure
+                </pre>
+            </div>
+        </div>
+
+        <!-- Diagram 3: Agentic + HITL -->
+        <div id="diagram-3" class="diagram-panel hidden">
+            <div class="mb-3 flex items-center gap-x-3">
+                <div class="diagram-label text-amber-400">04 • LangGraph Agentic Workflows + Human-in-the-Loop</div>
+                <div class="h-px flex-1 bg-gradient-to-r from-slate-700"></div>
+            </div>
+            <div class="mermaid-container">
+                <pre class="mermaid">
+%%{init: {"theme":"dark"}}%%
+stateDiagram-v2
+    [*] --> Running: Workflow Triggered
+    Running --> MCP_Gate: MCP Governance Applied
+    MCP_Gate --> Generate: Context Minimized
+    
+    Generate --> Evaluate: After Model Call
+    Evaluate --> PendingReview: Medium/High Risk<br/>OR Low Confidence<br/>OR Missing Data
+    
+    Evaluate --> Completed: Low Risk + High Confidence
+    
+    PendingReview --> Approved: Human Approves
+    PendingReview --> NeedsRevision: Human Requests Revision
+    PendingReview --> Rejected: Human Rejects
+    
+    Approved --> Completed
+    NeedsRevision --> Running: Resume with Feedback
+    Rejected --> Terminated
+    
+    Completed --> [*]
+    Terminated --> [*]
+    
+    note right of PendingReview
+        DB-backed ReviewTask created.
+        LangGraph checkpointed.
+        Full audit trail captured.
+    end note
+                </pre>
+            </div>
+        </div>
+
+        <div class="text-center mt-4">
+            <span class="text-xs px-3 py-1 bg-slate-900 rounded-full border border-slate-700 text-slate-400">All diagrams are faithful to the running codebase in <code class="text-cyan-400">/services/platform-api</code></span>
+        </div>
+    </div>
+
+    <!-- GOVERNANCE PHILOSOPHY -->
+    <div id="governance" class="max-w-screen-xl mx-auto px-8 py-12 border-t border-slate-800">
+        <div class="grid md:grid-cols-2 gap-x-16 gap-y-12 items-center">
+            <div>
+                <div class="pill mb-4 bg-white/5 border border-white/10 text-white">THE NON-NEGOTIABLES</div>
+                <h2 class="text-4xl font-semibold font-display tracking-tighter leading-none">Governance is<br>not a policy document.</h2>
+                <p class="mt-6 text-xl text-slate-300">It is code that executes on every single request, enforced at multiple independent layers.</p>
+                
+                <ul class="mt-8 space-y-4 text-sm">
+                    <li class="flex gap-x-3"><i class="fa-solid fa-check text-emerald-400 mt-1"></i> <span>No clinical output reaches a user without passing MCP + (if required) human review</span></li>
+                    <li class="flex gap-x-3"><i class="fa-solid fa-check text-emerald-400 mt-1"></i> <span>Every PHI touch, routing decision, and review action is written to an immutable audit log</span></li>
+                    <li class="flex gap-x-3"><i class="fa-solid fa-check text-emerald-400 mt-1"></i> <span>Memory and Deep Agents are strictly governed — no raw clinical context retained without minimization</span></li>
+                </ul>
+            </div>
+            
+            <div class="glass rounded-3xl p-9 border border-slate-700">
+                <div class="uppercase text-xs tracking-[1.5px] mb-4 text-slate-400">Core Invariant</div>
+                <div class="text-3xl leading-tight font-medium tracking-tighter">
+                    "There is no path from user input to model inference that bypasses the MCP Governance layer."
+                </div>
+                <div class="mt-8 pt-8 border-t border-slate-700 text-sm text-slate-400">
+                    This is not aspirational. It is enforced in middleware, service boundaries, and LangGraph checkpoints.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- USE CASES -->
+    <div id="usecases" class="max-w-screen-xl mx-auto px-8 py-16">
+        <div class="flex justify-between items-end mb-8">
+            <div>
+                <div class="pill bg-teal-950 text-teal-400 border border-teal-900 mb-2">IMPLEMENTED TODAY</div>
+                <h2 class="font-display text-4xl font-semibold tracking-tight">Real clinical workflows.<br>Real governance.</h2>
+            </div>
+        </div>
+
+        <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="glass border border-slate-700 rounded-3xl p-6 premium-card">
+                <div class="font-semibold mb-1">72-Hour Chart Summary</div>
+                <div class="text-sm text-slate-400">Clinician-triggered comprehensive synthesis with citations and risk flags.</div>
+                <div class="mt-4 text-[10px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-check-double"></i> <span class="font-medium">Requires human review on high complexity</span></div>
+            </div>
+            <div class="glass border border-slate-700 rounded-3xl p-6 premium-card">
+                <div class="font-semibold mb-1">Clinical Risk Signal Detection</div>
+                <div class="text-sm text-slate-400">Overnight nurse workflow that surfaces deterioration signals from notes + labs.</div>
+                <div class="mt-4 text-[10px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-check-double"></i> <span class="font-medium">Always routed through MCP</span></div>
+            </div>
+            <div class="glass border border-slate-700 rounded-3xl p-6 premium-card">
+                <div class="font-semibold mb-1">Discharge Planning Agent</div>
+                <div class="text-sm text-slate-400">Multi-step LangGraph workflow that identifies blockers and drafts plans for care coordinators.</div>
+                <div class="mt-4 text-[10px] text-amber-400 flex items-center gap-1"><i class="fa-solid fa-user-check"></i> <span class="font-medium">Full human-in-the-loop checkpoint</span></div>
+            </div>
+            <div class="glass border border-slate-700 rounded-3xl p-6 premium-card">
+                <div class="font-semibold mb-1">Chest Pain Safety Triage</div>
+                <div class="text-sm text-slate-400">High-stakes safety scenario that demonstrates deterministic escalation and disclaimers.</div>
+                <div class="mt-4 text-[10px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-check-double"></i> <span class="font-medium">Hard safety lexicon enforcement</span></div>
+            </div>
+            <div class="glass border border-slate-700 rounded-3xl p-6 premium-card">
+                <div class="font-semibold mb-1">Patient Lab &amp; Result Explanation</div>
+                <div class="text-sm text-slate-400">Patient-facing view with strict consent scope + minimization applied automatically.</div>
+                <div class="mt-4 text-[10px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-check-double"></i> <span class="font-medium">Role-adapted output</span></div>
+            </div>
+            <div class="glass border border-slate-700 rounded-3xl p-6 premium-card">
+                <div class="font-semibold mb-1">Operational Intelligence (De-identified)</div>
+                <div class="text-sm text-slate-400">Admin queries against synthetic data for delayed discharge and throughput analysis.</div>
+                <div class="mt-4 text-[10px] text-emerald-400 flex items-center gap-1"><i class="fa-solid fa-check-double"></i> <span class="font-medium">No PHI leakage possible</span></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- STATS + PROOF -->
+    <div class="max-w-screen-xl mx-auto px-8 pb-20">
+        <div class="glass rounded-3xl border border-slate-700 px-8 md:px-10 py-10">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-y-9">
+                <div class="metric">
+                    <div class="text-5xl font-display font-semibold tracking-tighter text-white">30+</div>
+                    <div class="text-sm mt-1 text-slate-400">Unit, integration &amp; security tests covering governance paths</div>
+                </div>
+                <div class="metric">
+                    <div class="text-5xl font-display font-semibold tracking-tighter text-white">0</div>
+                    <div class="text-sm mt-1 text-slate-400">Paths from user → model that bypass MCP (enforced in code)</div>
+                </div>
+                <div class="metric">
+                    <div class="text-5xl font-display font-semibold tracking-tighter text-white">12</div>
+                    <div class="text-sm mt-1 text-slate-400">Production Mermaid architecture diagrams included in repo</div>
+                </div>
+                <div class="metric">
+                    <div class="text-5xl font-display font-semibold tracking-tighter text-white">100%</div>
+                    <div class="text-sm mt-1 text-slate-400">Requests carry correlation ID + full RBAC/ABAC context</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- FOR WHOM -->
+    <div class="max-w-screen-xl mx-auto px-8 pb-16">
+        <div class="text-center mb-10">
+            <div class="text-sm text-cyan-400 tracking-widest font-semibold">BUILT FOR TWO AUDIENCES</div>
+        </div>
+        <div class="grid md:grid-cols-2 gap-5">
+            <div class="border border-slate-700 rounded-3xl p-8">
+                <div class="uppercase text-xs font-medium tracking-widest mb-3 text-slate-400">FOR HEALTH SYSTEM LEADERS</div>
+                <div class="text-2xl font-semibold">A reference you can actually take to the compliance committee.</div>
+                <ul class="mt-6 space-y-2 text-sm text-slate-300">
+                    <li>• Full security &amp; compliance documentation</li>
+                    <li>• Immutable audit trail with human review state machine</li>
+                    <li>• Production Terraform modules (ECS, Cognito, OpenSearch, KMS, WAF)</li>
+                    <li>• Clear separation between "safe to demo" and "safe for PHI"</li>
+                </ul>
+            </div>
+            <div class="border border-slate-700 rounded-3xl p-8">
+                <div class="uppercase text-xs font-medium tracking-widest mb-3 text-slate-400">FOR STAFF+ ENGINEERS &amp; ARCHITECTS</div>
+                <div class="text-2xl font-semibold">Interview-ready depth. Production patterns.</div>
+                <ul class="mt-6 space-y-2 text-sm text-slate-300">
+                    <li>• Clean separation of Intent Router vs Agentic layer</li>
+                    <li>• Real LangGraph + official Deep Agents integration</li>
+                    <li>• Hindsight Memory with governed retrieval</li>
+                    <li>• Everything runnable locally in 5 minutes with identical architecture</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <!-- FINAL CTA -->
+    <div id="cta" class="border-t border-slate-800 bg-slate-900">
+        <div class="max-w-screen-xl mx-auto px-8 py-16">
+            <div class="max-w-2xl mx-auto text-center">
+                <div class="mx-auto w-12 h-12 rounded-2xl bg-gradient-to-br from-cyan-300 to-teal-400 flex items-center justify-center mb-6">
+                    <i class="fa-solid fa-shield-halved text-slate-950 text-3xl"></i>
+                </div>
+                
+                <h2 class="font-display text-4xl font-semibold tracking-tighter mb-4">Ready to build the clinical AI platform your hospital actually deserves?</h2>
+                <p class="text-xl text-slate-300">This is not a toy. It's the reference implementation of a full governance stack that you can study, extend, and deploy.</p>
+                
+                <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="https://github.com/anude/ClinIQ-Nexus" target="_blank" 
+                       class="inline-flex items-center justify-center gap-x-3 px-9 h-[54px] rounded-3xl bg-white font-semibold text-slate-950 hover:bg-white/90 transition">
+                        <i class="fa-brands fa-github text-xl"></i>
+                        <span>Star &amp; Clone on GitHub</span>
+                    </a>
+                    
+                    <a href="https://github.com/anude/ClinIQ-Nexus/blob/main/README.md" target="_blank" 
+                       class="inline-flex items-center justify-center gap-x-3 px-9 h-[54px] rounded-3xl border border-slate-600 hover:bg-slate-800 font-semibold transition">
+                        <span>Read the Full Architecture Guide</span>
+                    </a>
+                </div>
+                
+                <div class="mt-6 text-xs text-slate-400">Local run: <code class="bg-slate-950 px-1.5 py-px rounded">docker compose up --build</code> (5 minutes)</div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-8 text-xs border-t border-slate-800 text-slate-500">
+        MediCore AI Platform — A production-oriented reference implementation of governed clinical AI.<br>
+        <span class="text-slate-600">For demonstration, education, and architecture review purposes. Real patient data requires legal/compliance review and appropriate BAAs.</span>
+    </footer>
+
+    <script>
+        // Tailwind script
+        function initTailwind() {
+            document.documentElement.style.setProperty('--accent', '#22d3ee');
+            
+            tailwind.config = {
+                theme: {
+                    extend: {
+                        fontFamily: {
+                            'display': ['Space Grotesk', 'Inter', 'system-ui', 'sans-serif']
+                        }
+                    }
+                }
+            };
+        }
+
+        // Mermaid initialization
+        function initMermaid() {
+            mermaid.initialize({
+                startOnLoad: false,
+                theme: 'dark',
+                flowchart: { 
+                    useMaxWidth: true,
+                    htmlLabels: true,
+                    curve: 'basis'
+                },
+                securityLevel: 'loose'
+            });
+            
+            // Render all visible diagrams
+            const diagrams = document.querySelectorAll('.mermaid');
+            diagrams.forEach((el, i) => {
+                // Only render if parent panel is visible
+                const panel = el.closest('.diagram-panel');
+                if (panel && !panel.classList.contains('hidden')) {
+                    mermaid.run({ nodes: [el] });
+                }
+            });
+        }
+
+        // Diagram tab switching
+        let currentDiagram = 0;
+
+        function showDiagram(index) {
+            // Hide all panels
+            document.querySelectorAll('.diagram-panel').forEach(panel => {
+                panel.classList.add('hidden');
+            });
+            
+            // Show selected
+            const targetPanel = document.getElementById('diagram-' + index);
+            if (targetPanel) {
+                targetPanel.classList.remove('hidden');
+            }
+            
+            // Update tab styles
+            document.querySelectorAll('.diagram-tab').forEach((tab, i) => {
+                if (parseInt(tab.dataset.tab) === index) {
+                    tab.classList.add('bg-slate-800', 'border-cyan-400');
+                    tab.classList.remove('border-slate-700');
+                } else {
+                    tab.classList.remove('bg-slate-800', 'border-cyan-400');
+                    tab.classList.add('border-slate-700');
+                }
+            });
+            
+            // Re-render mermaid in the newly visible panel (important)
+            setTimeout(() => {
+                const panel = document.getElementById('diagram-' + index);
+                if (panel) {
+                    const mermaidEl = panel.querySelector('.mermaid');
+                    if (mermaidEl) {
+                        // Clear previous render if needed
+                        if (mermaidEl.getAttribute('data-processed')) {
+                            mermaidEl.removeAttribute('data-processed');
+                            mermaidEl.innerHTML = mermaidEl.getAttribute('data-original') || mermaidEl.innerHTML;
+                        }
+                        mermaid.run({ nodes: [mermaidEl] });
+                    }
+                }
+            }, 80);
+        }
+
+        // Store original mermaid content for re-rendering
+        function prepareMermaidDiagrams() {
+            document.querySelectorAll('.mermaid').forEach(el => {
+                el.setAttribute('data-original', el.innerHTML);
+            });
+        }
+
+        // Keyboard support for tabs
+        function setupKeyboard() {
+            document.addEventListener('keydown', function(e) {
+                if (e.key === '/' && document.activeElement.tagName === 'BODY') {
+                    e.preventDefault();
+                    const tabs = document.getElementById('diagram-tabs');
+                    if (tabs) tabs.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            });
+            
+            // Make sure first diagram renders properly
+            setTimeout(() => {
+                const firstDiagram = document.getElementById('diagram-0');
+                if (firstDiagram && !firstDiagram.classList.contains('hidden')) {
+                    const mermaidEl = firstDiagram.querySelector('.mermaid');
+                    if (mermaidEl && !mermaidEl.getAttribute('data-processed')) {
+                        mermaid.run({ nodes: [mermaidEl] });
+                    }
+                }
+            }, 650);
+        }
+
+        // Smooth scroll for nav
+        function setupSmoothScroll() {
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function(e) {
+                    const target = document.querySelector(this.getAttribute('href'));
+                    if (target) {
+                        e.preventDefault();
+                        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                    }
+                });
+            });
+        }
+
+        // Initialize everything
+        function init() {
+            initTailwind();
+            prepareMermaidDiagrams();
+            initMermaid();
+            setupKeyboard();
+            setupSmoothScroll();
+            
+            // Default activate first tab
+            const firstTab = document.querySelector('.diagram-tab[data-tab="0"]');
+            if (firstTab) {
+                firstTab.classList.add('bg-slate-800', 'border-cyan-400');
+            }
+            
+            // Show the first diagram panel explicitly
+            const firstPanel = document.getElementById('diagram-0');
+            if (firstPanel) firstPanel.classList.remove('hidden');
+            
+            // Optional: auto-render all diagrams after a delay (for people who scroll fast)
+            setTimeout(() => {
+                document.querySelectorAll('.mermaid').forEach(el => {
+                    if (!el.getAttribute('data-processed')) {
+                        try { 
+                            mermaid.run({ nodes: [el] }); 
+                        } catch(e){}
+                    }
+                });
+            }, 1800);
+            
+            // Easter egg: logo click shows all diagrams briefly
+            const logo = document.querySelector('.fa-shield-halved');
+            if (logo) {
+                logo.style.cursor = 'pointer';
+                logo.addEventListener('click', () => {
+                    document.querySelectorAll('.diagram-panel').forEach(p => p.classList.remove('hidden'));
+                    setTimeout(() => {
+                        document.getElementById('diagram-0').classList.remove('hidden');
+                        document.querySelectorAll('.diagram-panel:not(#diagram-0)').forEach(p => p.classList.add('hidden'));
+                    }, 2200);
+                });
+            }
+            
+            // LinkedIn tip toast (only once)
+            setTimeout(() => {
+                if (!sessionStorage.getItem('linkedin-toast-shown')) {
+                    const toast = document.createElement('div');
+                    toast.className = `fixed bottom-6 right-6 max-w-xs text-xs glass border border-slate-700 px-4 py-3 rounded-2xl shadow-xl text-slate-300 z-50`;
+                    toast.innerHTML = `
+                        <div class="flex gap-3 items-start">
+                            <div class="pt-0.5"><i class="fa-solid fa-lightbulb text-amber-400"></i></div>
+                            <div>
+                                <div class="font-medium text-amber-300">Pro tip for LinkedIn</div>
+                                <div class="text-[11px] mt-0.5">Screenshot individual sections or open full screen for beautiful carousels.</div>
+                            </div>
+                        </div>`;
+                    document.body.appendChild(toast);
+                    
+                    setTimeout(() => {
+                        toast.style.transition = 'all .4s ease';
+                        toast.style.opacity = '0';
+                        setTimeout(() => toast.remove(), 300);
+                    }, 6200);
+                    
+                    sessionStorage.setItem('linkedin-toast-shown', 'true');
+                }
+            }, 10500);
+            
+            console.log('%c[MediCore] Marketing HTML initialized — ready for LinkedIn.', 'color:#64748b');
+        }
+
+        window.onload = init;
+        
+        // Public helper if someone wants to force re-render a diagram from console
+        window.forceRenderDiagram = function(index) {
+            const panel = document.getElementById('diagram-' + index);
+            if (!panel) return;
+            panel.classList.remove('hidden');
+            const m = panel.querySelector('.mermaid');
+            if (m) {
+                m.removeAttribute('data-processed');
+                mermaid.run({ nodes: [m] });
+            }
+        };
+    </script>
+</body>
+</html>

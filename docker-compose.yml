@@ -1,12 +1,16 @@
 version: '3.9'
 
+# Enterprise docker-compose for local dev + reference prod-like.
+# For real production use: ECS/Fargate, k8s, or compose with override + secrets + external networks.
+# NEVER use these weak dev credentials in any shared or cloud environment.
+
 services:
   postgres:
     image: pgvector/pgvector:pg16
     container_name: cliniq-postgres
     environment:
       POSTGRES_USER: cliniq
-      POSTGRES_PASSWORD: cliniq_dev_password
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cliniq_dev_password}
       POSTGRES_DB: cliniq_nexus
     ports:
       - "5432:5432"
@@ -17,6 +21,15 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    restart: unless-stopped
+    # Resource limits (tune for prod)
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+    security_opt:
+      - no-new-privileges:true
     networks:
       - cliniq-network
 
@@ -30,6 +43,14 @@ services:
       interval: 5s
       timeout: 3s
       retries: 5
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '0.5'
+          memory: 512M
+    security_opt:
+      - no-new-privileges:true
     networks:
       - cliniq-network
 
@@ -39,13 +60,15 @@ services:
       dockerfile: services/platform-api/Dockerfile
     container_name: cliniq-api
     environment:
-      - DATABASE_URL=postgresql+asyncpg://cliniq:cliniq_dev_password@postgres:5432/cliniq_nexus
+      - DATABASE_URL=postgresql+asyncpg://cliniq:${POSTGRES_PASSWORD:-cliniq_dev_password}@postgres:5432/cliniq_nexus
       - REDIS_URL=redis://redis:6379/0
-      - ENVIRONMENT=development
-      - LOG_LEVEL=INFO
-      - USE_REAL_AWS=false
-      - JWT_SECRET=dev-jwt-secret-change-in-prod-please
-      - DEFAULT_TENANT_ID=tenant_hospital_a
+      - ENVIRONMENT=${ENVIRONMENT:-development}
+      - LOG_LEVEL=${LOG_LEVEL:-INFO}
+      - USE_REAL_AWS=${USE_REAL_AWS:-false}
+      - JWT_SECRET=${JWT_SECRET:-dev-jwt-secret-change-in-prod-please}
+      - DEFAULT_TENANT_ID=${DEFAULT_TENANT_ID:-tenant_hospital_a}
+      - MAX_REQUEST_BYTES=${MAX_REQUEST_BYTES:-10485760}
+      - REQUEST_TIMEOUT_SECONDS=${REQUEST_TIMEOUT_SECONDS:-45}
     ports:
       - "8000:8000"
     depends_on:
@@ -53,18 +76,34 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+    # Dev volume mounts for hot reload; REMOVE in any prod-like run
     volumes:
       - ./services/platform-api:/app
       - ./services:/workspace/services
       - ./data:/app/data
     networks:
       - cliniq-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '2.0'
+          memory: 2G
+    security_opt:
+      - no-new-privileges:true
+    # Prod command would drop --reload and run migrations in init container
     command: >
       sh -c "
         alembic upgrade head &&
         python scripts/seed_demo_data.py &&
         uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
       "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
 
   web:
     build:
@@ -72,18 +111,25 @@ services:
       dockerfile: Dockerfile
     container_name: cliniq-web
     environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
-      - NEXT_PUBLIC_USE_MOCK_AUTH=true
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      - NEXT_PUBLIC_USE_MOCK_AUTH=${NEXT_PUBLIC_USE_MOCK_AUTH:-true}
     ports:
       - "3000:3000"
     depends_on:
       - platform-api
+    # Dev mounts only
     volumes:
       - ./apps/web:/app
       - /app/node_modules
       - /app/.next
     networks:
       - cliniq-network
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
     command: npm run dev
 
 volumes:

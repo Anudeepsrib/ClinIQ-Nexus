@@ -25,11 +25,15 @@ const nextConfig = {
             key: 'Permissions-Policy',
             value: 'camera=(), microphone=(), geolocation=(), interest-cohort=()',
           },
-          // Basic CSP - tighten further in real prod with nonce + specific domains
+          // CSP - hardened reference. 'unsafe-inline'/'unsafe-eval' required for Next.js + Tailwind in current setup.
+          // Enterprise prod: implement nonce-based CSP via custom server/middleware or next-safe or strict-dynamic.
+          // Remove 'http://localhost:*' and ws: for real deployments behind ALB/CloudFront + HTTPS only.
           {
             key: 'Content-Security-Policy',
-            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: http://localhost:* ws: wss:;",
+            value: "default-src 'self'; script-src 'self' 'unsafe-eval' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https: http://localhost:* ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self';",
           },
+          // Report CSP violations in prod (set up /api/csp-report endpoint or external collector)
+          // { key: 'Content-Security-Policy-Report-Only', value: "..." },
         ],
       },
     ];

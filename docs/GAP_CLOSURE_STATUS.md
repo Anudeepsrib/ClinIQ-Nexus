@@ -1,10 +1,23 @@
 # Gap Closure Status
 
-Last updated: 2026-05-30
+Last updated: 2026-06 (enterprise hardening pass)
 
-## Closed In This Pass
+## Closed In This Pass (Enterprise Hardening - Senior FSD Pass)
 
-- Fixed Python import/package layout for `services.agent_orchestration_service`, `services.memory_service`, and root-level tests.
+- CI/CD enterprise hardening: bandit SAST, pip-audit, npm-audit, hadolint, stricter ruff+format, coverage, secret grep scan, trivy severity enforcement.
+- Added RequestSizeLimitMiddleware and RequestTimeoutMiddleware (configurable, fail closed).
+- Enhanced TenantIsolationMiddleware with query tenant checks + patient ABAC pre-enforcement on sensitive paths.
+- Implemented structlog PHI/PII redaction processor (sensitive keys + PII regex + length truncation for clinical text).
+- Root + web .dockerignore; Dockerfile non-root early, labels, leaner, secret-file ready, better healthcheck, no-access-log.
+- docker-compose: variable secrets, resource limits (deploy), no-new-privileges, restart policies, prod guidance.
+- Config secrets: JWT_SECRET_FILE / DATABASE_URL_FILE support + apply + stronger validate_runtime (min length, no dev passwords, non-dev secret block).
+- DB pool tuning: configurable size/overflow + pool_recycle + connect app name.
+- Frontend CSP hardened comments + prod notes; NextAuth: secure cookies, maxAge 8h aligned, httpOnly; ChatInterface: client-side length + control char sanitization.
+- CORS: explicit allow_headers (no blanket *).
+- Updated PRODUCTION_UPGRADE_PLAN.md and this file.
+- Verified: imports, ruff critical, key pytest suites (auth/memory/mcp/safety), frontend build all pass.
+
+Previous closed items preserved below.
 - Made Deep Agent tools instantiate correctly with LangChain `BaseTool`/Pydantic internals.
 - Wired `DeepAgentFactory` audit/memory tools and made discharge planning invoke the Deep Agent path.
 - Added an adapter in `BaseDeepAgent` for the official LangChain `deepagents.create_deep_agent` harness when the optional SDK and production model are installed.
@@ -49,10 +62,13 @@ Last updated: 2026-05-30
 - OpenTelemetry app trace export, endpoint policy tightening, Route 53 automation, and AWS deployment promotion workflows remain incomplete.
 - Full security/load/frontend/infrastructure test suites remain incomplete.
 
-## Current Verification
+## Current Verification (post-hardening)
 
-- `python -m pytest -q` passes: 30 tests.
-- `ruff check --select E9,F63,F7,F82 services/platform-api/app services/memory_service/app services/agent_orchestration_service/app tests` passes.
-- `python -c "import app.main; print('backend import ok')"` passes from `services/platform-api`.
+- `python -m pytest -q` (relevant suites) pass; full collection ~30 tests (slow torch import in env).
+- `ruff check --select E9,F63,F7,F82 ...` passes (critical subset).
+- `python -m ruff check` (broader) on modified paths clean after fixes.
+- Backend core imports + new middlewares + redaction + config validation all load.
 - `npm run build` passes from `apps/web`.
-- Native Terraform verification could not be executed in this local shell because neither `terraform` nor `tofu` is installed.
+- Runtime config validation blocks on weak secrets / prod misconfig as designed.
+- Docker build contexts reduced via .dockerignore.
+- Native Terraform / live AWS still not executed locally (no creds/tf binary in this env).

@@ -30,11 +30,13 @@ from app.core.context import TenantContext, UserContext, set_request_context
 from app.core.exceptions import ClinIQException, handle_cliniq_exception
 from app.core.logging import configure_logging
 from app.core.middleware import (
+    AuthMiddleware,
     CorrelationIdMiddleware,
     RateLimitMiddleware,
+    RequestSizeLimitMiddleware,
+    RequestTimeoutMiddleware,
     SecurityHeadersMiddleware,
     TenantIsolationMiddleware,
-    AuthMiddleware,
 )
 from app.api.v1 import router as api_v1_router
 from app.models.base import Base
@@ -101,20 +103,23 @@ app = FastAPI(
 if OPENTELEMETRY_AVAILABLE and settings.USE_REAL_AWS:
     FastAPIInstrumentor.instrument_app(app, excluded_urls="health,ready")
 
-# Security headers + CORS (locked down for demo; tighten in prod)
+# Security headers + CORS (locked down for demo; tighten in prod via settings + runtime validation)
+# Never allow wildcard when credentials=True in real deployments.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PATCH", "DELETE", "OPTIONS"],
-    allow_headers=["*"],
+    allow_headers=["Authorization", "Content-Type", "X-Correlation-ID", "X-Demo-User"],
     max_age=600,
 )
 
-# Core middleware stack (order matters)
+# Core middleware stack (order matters: later added are inner; Auth before TenantIso for context)
 app.add_middleware(CorrelationIdMiddleware)
-app.add_middleware(TenantIsolationMiddleware)
 app.add_middleware(AuthMiddleware)
+app.add_middleware(TenantIsolationMiddleware)  # now sees user/tenant from Auth
+app.add_middleware(RequestSizeLimitMiddleware, max_bytes=settings.MAX_REQUEST_BYTES)
+app.add_middleware(RequestTimeoutMiddleware, timeout_seconds=settings.REQUEST_TIMEOUT_SECONDS)
 app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 

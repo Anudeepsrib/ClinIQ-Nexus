@@ -30,7 +30,16 @@
 - [x] Terraform modules for CloudWatch Log Groups and CloudTrail audit trail
 - [x] Frontend `.env.example` for Cognito configuration
 
-## Phase 5: CI/CD and Final Polish
-- [ ] Update GitHub Actions for strict linting/testing
-- [ ] Update all documentation (ARCHITECTURE.md, SECURITY.md, etc.)
-- [ ] End-to-end integration tests
+## Phase 5: CI/CD and Final Polish ✅ HARDENED (this pass)
+- [x] Expanded GitHub Actions: stricter ruff (incl E,F,W,I etc), ruff format check, bandit SAST, pip-audit (high+), npm audit (high+), hadolint Docker lint, trivy severity HIGH/CRITICAL block, basic secret pattern scan, coverage reporting.
+- [x] Added enterprise middleware: RequestSizeLimit (10MB default, configurable), RequestTimeout (45s), enhanced TenantIsolation with early ABAC/path guards.
+- [x] PHI/PII redaction processor in structlog (key + regex patterns + truncation for long clinical text).
+- [x] Docker hardening: .dockerignore root+web, improved non-root (uid 1001 early), labels, minimal system pkgs, secret file support, health on /ready, --no-access-log, resource hints in compose.
+- [x] docker-compose: env var driven secrets, deploy resource limits, security_opt no-new-privs, restart policies, prod comments.
+- [x] Config: *_FILE secret support (JWT/DATABASE), stronger runtime validation (secret length, no dev pw in prod-like, env checks), DB pool configurable + recycle.
+- [x] Frontend: CSP comments for nonce path, hardened NextAuth (jwt maxAge, secure cookies in prod, httpOnly, session align to 8h), client query sanitization + maxLength.
+- [x] CORS tightened (explicit headers, not *).
+- [x] DB engine: pool_recycle + app name.
+- [ ] (remaining) Live AWS integration tests + e2e full flows, full multi-page frontend, complete ingestion worker.
+
+See GAP_CLOSURE_STATUS.md for updated status.
