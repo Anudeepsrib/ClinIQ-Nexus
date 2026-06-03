@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import React, { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -24,7 +24,7 @@ const EXAMPLE_QUERIES: Record<string, string> = {
 
 type Tab = 'chat' | 'reviews' | 'workflows';
 
-export default function MediCoreClinicalPlatform() {
+export default function CareOSClinicalPlatform() {
   const auth = useAuth();
   const queryClient = useQueryClient();
 

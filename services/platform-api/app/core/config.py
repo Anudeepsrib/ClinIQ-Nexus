@@ -1,4 +1,4 @@
-"""Application configuration (Pydantic Settings v2).
+﻿"""Application configuration (Pydantic Settings v2).
 Enterprise: supports *_FILE for docker/k8s secrets (no env var leak in ps).
 """
 
@@ -25,9 +25,9 @@ class Settings(BaseSettings):
     USE_REAL_AWS: bool = False
 
     # Database & Storage
-    DATABASE_URL: str = "postgresql+asyncpg://cliniq:cliniq_dev_password@localhost:5432/cliniq_nexus"
-    OPENSEARCH_URL: str = "https://search-cliniq-nexus-dev-xxxxx.us-east-1.es.amazonaws.com"
-    S3_BUCKET_NAME: str = "cliniq-nexus-dev-documents"
+    DATABASE_URL: str = "postgresql+asyncpg://careos:careos_dev_password@localhost:5432/careos"
+    OPENSEARCH_URL: str = "https://search-careos-dev-xxxxx.us-east-1.es.amazonaws.com"
+    S3_BUCKET_NAME: str = "careos-dev-documents"
 
     # Redis
     REDIS_URL: str = "redis://localhost:6379/0"
@@ -151,7 +151,7 @@ def validate_runtime_settings() -> list[str]:
         errors.append("JWT_SECRET must be at least 32 characters for production-like security")
 
     # Database URL should not contain obvious dev passwords in prod-like
-    if "cliniq_dev_password" in (settings.DATABASE_URL or "") and production_like:
+    if "careos_dev_password" in (settings.DATABASE_URL or "") and production_like:
         errors.append("DATABASE_URL must not contain development passwords in production-like environments")
 
     return errors

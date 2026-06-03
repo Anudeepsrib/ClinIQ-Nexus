@@ -1,4 +1,4 @@
-# ClinIQ-Nexus Data Model
+﻿# careOS Data Model
 
 ## Core Principles
 

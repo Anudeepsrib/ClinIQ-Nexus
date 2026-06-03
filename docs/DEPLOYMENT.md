@@ -1,10 +1,10 @@
-# ClinIQ-Nexus Deployment Guide
+﻿# careOS Deployment Guide
 
 ## Local Development (Recommended for Demos & Development)
 
 ```bash
 git clone <repo>
-cd ClinIQ-Nexus
+cd careOS
 cp .env.example .env
 docker compose up --build
 ```

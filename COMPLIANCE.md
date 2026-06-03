@@ -1,4 +1,4 @@
-# ClinIQ-Nexus Compliance Architecture
+﻿# careOS Compliance Architecture
 
 This platform was designed from day one around HIPAA Privacy, Security, and Breach Notification Rules.
 

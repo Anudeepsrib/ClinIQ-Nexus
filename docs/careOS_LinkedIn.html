@@ -1,15 +1,15 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>MediCore AI Platform • The Clinical AI Architecture Hospitals Can Actually Defend</title>
+    <title>careOS • The Clinical AI Architecture Hospitals Can Actually Defend</title>
     
     <!-- LinkedIn / Social Meta -->
     <meta name="description" content="The reference-grade, architecture-first clinical AI platform. Deterministic Intent Routing + Non-Bypassable MCP Governance + Full Human-in-the-Loop. Defense-in-depth for real hospital deployment.">
-    <meta property="og:title" content="MediCore: The Clinical AI Platform Built for Hospitals">
+    <meta property="og:title" content="careOS: The Clinical AI Platform Built for Hospitals">
     <meta property="og:description" content="No path to an LLM bypasses governance. Full RBAC/ABAC, immutable audit, LangGraph agents with mandatory human review. Production reference implementation now available.">
-    <meta property="og:image" content="https://via.placeholder.com/1200x630/0f172a/38bdf8?text=MediCore+AI+Platform">
+    <meta property="og:image" content="https://via.placeholder.com/1200x630/0f172a/38bdf8?text=careOS+AI+Platform">
     <meta property="og:type" content="website">
     
     <script src="https://cdn.tailwindcss.com"></script>
@@ -148,7 +148,7 @@
                             <i class="fa-solid fa-shield-halved text-slate-950 text-2xl"></i>
                         </div>
                         <div>
-                            <span class="font-display font-semibold text-2xl tracking-tighter">MediCore</span>
+                            <span class="font-display font-semibold text-2xl tracking-tighter">careOS</span>
                             <span class="text-[10px] font-mono bg-slate-900 px-1.5 py-px rounded text-cyan-400 ml-1 align-super">AI</span>
                         </div>
                     </div>
@@ -162,7 +162,7 @@
                     <a href="#governance" class="hidden md:inline-block hover:text-cyan-300 transition-colors">Governance</a>
                     <a href="#usecases" class="hidden md:inline-block hover:text-cyan-300 transition-colors">Use Cases</a>
                     
-                    <a href="https://github.com/anude/ClinIQ-Nexus" target="_blank" 
+                    <a href="https://github.com/anude/careOS" target="_blank" 
                        class="inline-flex items-center gap-x-2 px-5 py-2 text-sm font-semibold rounded-2xl border border-slate-700 hover:bg-slate-900 transition-all active:scale-[0.985]">
                         <i class="fa-brands fa-github"></i>
                         <span>GitHub</span>
@@ -213,7 +213,7 @@
                         <i class="fa-solid fa-arrow-right group-active:translate-x-0.5 transition"></i>
                     </a>
                     
-                    <a href="https://github.com/anude/ClinIQ-Nexus" target="_blank"
+                    <a href="https://github.com/anude/careOS" target="_blank"
                        class="inline-flex items-center justify-center gap-x-3 px-8 h-14 rounded-3xl border border-slate-700 hover:bg-slate-900 font-semibold text-base transition-all">
                         <i class="fa-brands fa-github text-xl"></i>
                         <span>Clone the Reference</span>
@@ -345,7 +345,7 @@ flowchart TB
         UI[Next.js Frontend<br/>Role-Aware Chat + Review Queue]
     end
 
-    subgraph Platform["MediCore Platform API (FastAPI)"]
+    subgraph Platform["careOS Platform API (FastAPI)"]
         direction TB
         Auth[Auth + RBAC/ABAC Middleware]
         Router[Deterministic Intent Router<br/>+ Safety Lexicon]
@@ -659,13 +659,13 @@ stateDiagram-v2
                 <p class="text-xl text-slate-300">This is not a toy. It's the reference implementation of a full governance stack that you can study, extend, and deploy.</p>
                 
                 <div class="mt-10 flex flex-col sm:flex-row gap-4 justify-center">
-                    <a href="https://github.com/anude/ClinIQ-Nexus" target="_blank" 
+                    <a href="https://github.com/anude/careOS" target="_blank" 
                        class="inline-flex items-center justify-center gap-x-3 px-9 h-[54px] rounded-3xl bg-white font-semibold text-slate-950 hover:bg-white/90 transition">
                         <i class="fa-brands fa-github text-xl"></i>
                         <span>Star &amp; Clone on GitHub</span>
                     </a>
                     
-                    <a href="https://github.com/anude/ClinIQ-Nexus/blob/main/README.md" target="_blank" 
+                    <a href="https://github.com/anude/careOS/blob/main/README.md" target="_blank" 
                        class="inline-flex items-center justify-center gap-x-3 px-9 h-[54px] rounded-3xl border border-slate-600 hover:bg-slate-800 font-semibold transition">
                         <span>Read the Full Architecture Guide</span>
                     </a>
@@ -677,7 +677,7 @@ stateDiagram-v2
     </div>
 
     <footer class="text-center py-8 text-xs border-t border-slate-800 text-slate-500">
-        MediCore AI Platform — A production-oriented reference implementation of governed clinical AI.<br>
+        careOS — A production-oriented reference implementation of governed clinical AI.<br>
         <span class="text-slate-600">For demonstration, education, and architecture review purposes. Real patient data requires legal/compliance review and appropriate BAAs.</span>
     </footer>
 
@@ -873,7 +873,7 @@ stateDiagram-v2
                 }
             }, 10500);
             
-            console.log('%c[MediCore] Marketing HTML initialized — ready for LinkedIn.', 'color:#64748b');
+            console.log('%c[careOS] Marketing HTML initialized — ready for LinkedIn.', 'color:#64748b');
         }
 
         window.onload = init;

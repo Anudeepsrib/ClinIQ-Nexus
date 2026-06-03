@@ -1,7 +1,7 @@
-"use client";
+﻿"use client";
 
 /**
- * useAuth - Unified authentication hook for MediCore AI.
+ * useAuth - Unified authentication hook for careOS.
  *
  * Production: NextAuth + Cognito (JWT passthrough)
  * Demo: Local mock users via platform-api /auth/login

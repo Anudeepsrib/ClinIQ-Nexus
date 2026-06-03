@@ -1,5 +1,5 @@
-"""
-Robust demo seed script for ClinIQ-Nexus.
+﻿"""
+Robust demo seed script for careOS.
 Creates realistic but completely fictional clinical data for testing the full governance stack.
 """
 
@@ -16,7 +16,7 @@ from app.providers.embedding_provider import embedding_provider
 
 
 async def seed():
-    print("🌱 Seeding ClinIQ-Nexus demo environment...")
+    print("🌱 Seeding careOS demo environment...")
 
     async with async_session() as session:
         tenant_id = "tenant_hospital_a"

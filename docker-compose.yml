@@ -1,4 +1,4 @@
-version: '3.9'
+﻿version: '3.9'
 
 # Enterprise docker-compose for local dev + reference prod-like.
 # For real production use: ECS/Fargate, k8s, or compose with override + secrets + external networks.
@@ -7,17 +7,17 @@ version: '3.9'
 services:
   postgres:
     image: pgvector/pgvector:pg16
-    container_name: cliniq-postgres
+    container_name: careos-postgres
     environment:
-      POSTGRES_USER: cliniq
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cliniq_dev_password}
-      POSTGRES_DB: cliniq_nexus
+      POSTGRES_USER: careos
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-careos_dev_password}
+      POSTGRES_DB: careos
     ports:
       - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U cliniq -d cliniq_nexus"]
+      test: ["CMD-SHELL", "pg_isready -U careos -d careos"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -31,11 +31,11 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      - cliniq-network
+      - careos-network
 
   redis:
     image: redis:7-alpine
-    container_name: cliniq-redis
+    container_name: careos-redis
     ports:
       - "6379:6379"
     healthcheck:
@@ -52,15 +52,15 @@ services:
     security_opt:
       - no-new-privileges:true
     networks:
-      - cliniq-network
+      - careos-network
 
   platform-api:
     build:
       context: .
       dockerfile: services/platform-api/Dockerfile
-    container_name: cliniq-api
+    container_name: careos-api
     environment:
-      - DATABASE_URL=postgresql+asyncpg://cliniq:${POSTGRES_PASSWORD:-cliniq_dev_password}@postgres:5432/cliniq_nexus
+      - DATABASE_URL=postgresql+asyncpg://careos:${POSTGRES_PASSWORD:-careos_dev_password}@postgres:5432/careos
       - REDIS_URL=redis://redis:6379/0
       - ENVIRONMENT=${ENVIRONMENT:-development}
       - LOG_LEVEL=${LOG_LEVEL:-INFO}
@@ -82,7 +82,7 @@ services:
       - ./services:/workspace/services
       - ./data:/app/data
     networks:
-      - cliniq-network
+      - careos-network
     restart: unless-stopped
     deploy:
       resources:
@@ -109,7 +109,7 @@ services:
     build:
       context: ./apps/web
       dockerfile: Dockerfile
-    container_name: cliniq-web
+    container_name: careos-web
     environment:
       - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL:-http://localhost:8000}
       - NEXT_PUBLIC_USE_MOCK_AUTH=${NEXT_PUBLIC_USE_MOCK_AUTH:-true}
@@ -123,7 +123,7 @@ services:
       - /app/node_modules
       - /app/.next
     networks:
-      - cliniq-network
+      - careos-network
     restart: unless-stopped
     deploy:
       resources:
@@ -136,5 +136,5 @@ volumes:
   postgres_data:
 
 networks:
-  cliniq-network:
+  careos-network:
     driver: bridge

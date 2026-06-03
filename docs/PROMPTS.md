@@ -1,4 +1,4 @@
-# ClinIQ-Nexus Prompt Templates
+﻿# careOS Prompt Templates
 
 > All prompts are applied **after** MCP governance. Only governed context ever reaches the model.
 

@@ -1,6 +1,6 @@
-# ClinIQ-Nexus Architecture (Interview-Ready)
+﻿# careOS Architecture (Interview-Ready)
 
-This document explains the key architectural decisions that make ClinIQ-Nexus a production-grade, defensible clinical AI platform rather than a prototype.
+This document explains the key architectural decisions that make careOS a production-grade, defensible clinical AI platform rather than a prototype.
 
 ## 1. Why Deterministic Intent Routing Before Any Agent?
 

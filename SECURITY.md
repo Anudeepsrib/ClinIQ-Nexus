@@ -1,4 +1,4 @@
-# ClinIQ-Nexus Security Model
+﻿# careOS Security Model
 
 ## Defense in Depth
 

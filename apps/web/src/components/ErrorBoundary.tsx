@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import React from 'react';
 import { AlertTriangle, RefreshCw, Home } from 'lucide-react';
@@ -25,7 +25,7 @@ export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoun
 
   componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
     // In production, send to error reporting service (Sentry, etc.)
-    console.error('MediCore UI ErrorBoundary caught:', error, errorInfo);
+    console.error('careOS UI ErrorBoundary caught:', error, errorInfo);
     
     // Future: window.gtag?.('event', 'exception', { description: error.message });
   }

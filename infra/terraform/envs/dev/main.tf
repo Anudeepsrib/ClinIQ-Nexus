@@ -1,4 +1,4 @@
-terraform {
+﻿terraform {
   required_version = ">= 1.6.0"
 
   required_providers {
@@ -24,7 +24,7 @@ variable "aws_region" {
 
 variable "project_name" {
   type    = string
-  default = "medicore-ai"
+  default = "careos"
 }
 
 variable "environment" {
@@ -49,12 +49,12 @@ variable "allowed_http_cidrs" {
 
 variable "db_name" {
   type    = string
-  default = "medicore_ai"
+  default = "careos"
 }
 
 variable "db_username" {
   type    = string
-  default = "medicoreadmin"
+  default = "careosadmin"
 }
 
 variable "db_password" {
@@ -99,7 +99,7 @@ locals {
   common_tags = {
     Environment = var.environment
     Project     = var.project_name
-    Application = "MediCore AI Platform"
+    Application = "careOS"
     HIPAA       = "true"
     ManagedBy   = "terraform"
   }
@@ -253,7 +253,7 @@ module "ecs" {
     COGNITO_USER_POOL_ID   = module.cognito.user_pool_id
     ENVIRONMENT            = var.environment
     OPENSEARCH_ENDPOINT    = "https://${module.opensearch.domain_endpoint}"
-    OTEL_SERVICE_NAME      = "medicore-platform-api"
+    OTEL_SERVICE_NAME      = "careos-platform-api"
     REDIS_URL              = "rediss://${module.redis.primary_endpoint}:6379/0"
     S3_DOCUMENT_BUCKET     = module.s3.documents_bucket_id
     SQS_INGESTION_QUEUE_URL = module.sqs.ingestion_queue_url

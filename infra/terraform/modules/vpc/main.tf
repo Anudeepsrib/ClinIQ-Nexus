@@ -1,4 +1,4 @@
-terraform {
+﻿terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
@@ -13,7 +13,7 @@ data "aws_availability_zones" "available" {
 
 variable "project_name" {
   type    = string
-  default = "cliniq-nexus"
+  default = "careos"
 }
 
 variable "environment" {

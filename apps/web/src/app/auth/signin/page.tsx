@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import { signIn } from "next-auth/react";
 import { Stethoscope, Shield, Lock } from "lucide-react";
@@ -13,7 +13,7 @@ export default function SignInPage() {
             <Stethoscope className="w-8 h-8 text-white" />
           </div>
           <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-blue-500 bg-clip-text text-transparent">
-            MediCore AI
+            careOS
           </h1>
           <p className="text-slate-400 text-sm mt-2">
             Enterprise Clinical Intelligence Platform
@@ -65,7 +65,7 @@ export default function SignInPage() {
         {/* Footer */}
         <p className="text-center text-[10px] text-slate-600 mt-6">
           All clinical outputs require licensed human review.<br />
-          MediCore AI never diagnoses, prescribes, or makes final clinical decisions.
+          careOS never diagnoses, prescribes, or makes final clinical decisions.
         </p>
       </div>
     </div>

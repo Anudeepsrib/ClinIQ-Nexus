@@ -1,5 +1,5 @@
-"""
-ClinIQ-Nexus Platform API
+﻿"""
+careOS Platform API
 Enterprise-grade, HIPAA-aware clinical AI platform for hospitals.
 
 This is the primary service demonstrating all architectural patterns:
@@ -27,7 +27,7 @@ from starlette.middleware.base import BaseHTTPMiddleware
 
 from app.core.config import settings, validate_runtime_settings
 from app.core.context import TenantContext, UserContext, set_request_context
-from app.core.exceptions import ClinIQException, handle_cliniq_exception
+from app.core.exceptions import CareOSException, handle_careos_exception
 from app.core.logging import configure_logging
 from app.core.middleware import (
     AuthMiddleware,
@@ -69,7 +69,7 @@ if OPENTELEMETRY_AVAILABLE and settings.USE_REAL_AWS:
 @asynccontextmanager
 async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     """Application lifespan manager."""
-    logger.info("starting_cliniq_nexus", environment=settings.ENVIRONMENT)
+    logger.info("starting_careos", environment=settings.ENVIRONMENT)
     config_errors = validate_runtime_settings()
     if config_errors:
         logger.critical("blocking_runtime_configuration_errors", errors=config_errors)
@@ -82,12 +82,12 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
 
     yield
 
-    logger.info("shutting_down_cliniq_nexus")
+    logger.info("shutting_down_careos")
     await engine.dispose()
 
 
 app = FastAPI(
-    title="ClinIQ-Nexus Platform API",
+    title="careOS Platform API",
     description=(
         "HIPAA-compliant, multi-tenant clinical AI platform. "
         "Never diagnoses, prescribes, or makes final clinical decisions. "
@@ -124,9 +124,9 @@ app.add_middleware(RateLimitMiddleware)
 app.add_middleware(SecurityHeadersMiddleware)
 
 
-@app.exception_handler(ClinIQException)
-async def cliniq_exception_handler(request: Request, exc: ClinIQException) -> JSONResponse:
-    return handle_cliniq_exception(request, exc)
+@app.exception_handler(CareOSException)
+async def careos_exception_handler(request: Request, exc: CareOSException) -> JSONResponse:
+    return handle_careos_exception(request, exc)
 
 
 @app.exception_handler(Exception)
@@ -202,7 +202,7 @@ async def readiness_check() -> dict:
 @app.get("/", include_in_schema=False)
 async def root() -> dict:
     return {
-        "name": "ClinIQ-Nexus",
+        "name": "careOS",
         "tagline": "Safe, governed clinical AI for hospitals",
         "docs": "/docs",
         "health": "/health",

@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ClinIQ-Nexus | Deep Agents and Hindsight Memory Integration</title>
+    <title>careOS | Deep Agents and Hindsight Memory Integration</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/mermaid@10.9.3/dist/mermaid.min.js"></script>
     <style>
@@ -236,7 +236,7 @@
                 <a href="#top" class="flex items-center gap-3 no-underline text-slate-900">
                     <span class="brand-mark">CN</span>
                     <span>
-                        <span class="block text-sm font-extrabold tracking-tight">ClinIQ-Nexus</span>
+                        <span class="block text-sm font-extrabold tracking-tight">careOS</span>
                         <span class="block text-xs text-slate-500 font-semibold">Deep Agents + Hindsight Memory</span>
                     </span>
                 </a>
@@ -264,7 +264,7 @@
                 <div class="lg:col-span-7">
                     <p class="section-kicker mb-3">Integration guide</p>
                     <h1 class="text-4xl lg:text-6xl font-black tracking-tight leading-[1.02]">
-                        Deep Agents and Hindsight Memory in ClinIQ-Nexus
+                        Deep Agents and Hindsight Memory in careOS
                     </h1>
                     <p class="mt-5 text-lg lg:text-xl text-slate-600 leading-relaxed max-w-4xl">
                         This guide explains how the platform combines deterministic routing, MCP context governance,
@@ -356,7 +356,7 @@
                             <span class="tag tag-violet">Hindsight Memory</span>
                             <h3 class="font-extrabold mt-3">Non-authoritative continuity</h3>
                             <p class="text-sm text-slate-600 mt-2">
-                                Hindsight Memory is ClinIQ-Nexus-specific. It stores approved, minimized preferences and
+                                Hindsight Memory is careOS-specific. It stores approved, minimized preferences and
                                 workflow notes, not clinical facts or document evidence.
                             </p>
                         </div>
@@ -433,11 +433,11 @@ flowchart TB
 
                 <section id="deep-agents" class="doc-card p-6 lg:p-8">
                     <p class="section-kicker">03 - Deep Agents</p>
-                    <h2 class="text-3xl font-black tracking-tight mt-2">Official harness plus ClinIQ-Nexus guardrails</h2>
+                    <h2 class="text-3xl font-black tracking-tight mt-2">Official harness plus careOS guardrails</h2>
                     <p class="mt-4 text-slate-600 leading-relaxed">
                         LangChain describes Deep Agents as a standalone harness for complex, multi-step agents with
                         planning, filesystem-backed context, subagents, long-term memory, and LangGraph runtime features.
-                        ClinIQ-Nexus does not hand that harness unrestricted clinical access. Instead, it wraps Deep Agent
+                        careOS does not hand that harness unrestricted clinical access. Instead, it wraps Deep Agent
                         creation behind <code>DeepAgentFactory</code> and registers only the tools allowed for the route
                         and role.
                     </p>
@@ -550,7 +550,7 @@ if deep_agent:
                     <p class="section-kicker">04 - Hindsight Memory</p>
                     <h2 class="text-3xl font-black tracking-tight mt-2">Governed memory is not RAG and not the Deep Agents native memory store</h2>
                     <p class="mt-4 text-slate-600 leading-relaxed">
-                        LangChain Deep Agents can use filesystem-backed long-term memory. ClinIQ-Nexus intentionally uses
+                        LangChain Deep Agents can use filesystem-backed long-term memory. careOS intentionally uses
                         a separate service called <code>HindsightMemoryService</code>. That service persists database records
                         only after classification, governance, audit logging, and write approval. This keeps memory separate
                         from clinical source documents and easier to review.
@@ -844,7 +844,7 @@ flowchart TB
                         </div>
                         <div class="callout warning p-4 text-sm text-slate-700">
                             <strong>Corrected:</strong> Hindsight Memory is not LangChain Deep Agents' native
-                            filesystem memory. It is a ClinIQ-Nexus service that writes governed database records.
+                            filesystem memory. It is a careOS service that writes governed database records.
                         </div>
                         <div class="callout warning p-4 text-sm text-slate-700">
                             <strong>Updated:</strong> <code>MemoryExtractor</code> is now called inside
@@ -858,7 +858,7 @@ flowchart TB
                         <div class="callout danger p-4 text-sm text-slate-700">
                             <strong>Production caution:</strong> the docs for newer Deep Agents permissions state that
                             filesystem permissions require <code>deepagents&gt;=0.5.2</code>, while this repo currently pins
-                            <code>0.5.0</code>. The current least-privilege guarantee comes from ClinIQ-Nexus factory tool
+                            <code>0.5.0</code>. The current least-privilege guarantee comes from careOS factory tool
                             scoping and governed custom tools, not SDK filesystem permissions.
                         </div>
                     </div>
@@ -898,7 +898,7 @@ flowchart TB
 
     <footer class="border-t border-slate-200 bg-white">
         <div class="page-shell px-5 lg:px-8 py-8 text-sm text-slate-600">
-            <strong>ClinIQ-Nexus / MediCore AI Platform.</strong>
+            <strong>careOS.</strong>
             Reference implementation documentation only. Not for clinical use without formal validation,
             security review, legal review, and operational controls.
         </div>

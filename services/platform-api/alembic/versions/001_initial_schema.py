@@ -1,4 +1,4 @@
-"""Initial schema - full ClinIQ-Nexus data model.
+﻿"""Initial schema - full careOS data model.
 
 Revision ID: 001
 Revises: 

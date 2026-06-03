@@ -1,4 +1,4 @@
-"""
+﻿"""
 Discharge Planning Agent — LangGraph implementation.
 
 Demonstrates:
@@ -7,7 +7,7 @@ Demonstrates:
 - Human-in-the-loop gate via review queue
 - Deep Agent style (planner + checker sub-flow)
 
-This is the reference for all future agentic workflows in ClinIQ-Nexus.
+This is the reference for all future agentic workflows in careOS.
 """
 
 from __future__ import annotations

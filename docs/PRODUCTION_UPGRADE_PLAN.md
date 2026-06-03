@@ -1,4 +1,4 @@
-# MediCore AI Platform - Production Upgrade Plan
+﻿# careOS - Production Upgrade Plan
 
 ## Phase 1: Security and Authentication ✅ COMPLETE
 - [x] Implement AWS Cognito JWT validation using JWKS in `security.py`
@@ -25,7 +25,7 @@
 - [x] Unified `useAuth` hook supporting both Cognito SSO and demo mode
 - [x] Production sign-in page with Cognito SSO + demo fallback
 - [x] Session-based JWT passthrough to platform-api
-- [x] MediCore AI branding throughout frontend
+- [x] careOS branding throughout frontend
 - [x] OpenTelemetry instrumentation (TracerProvider, FastAPIInstrumentor, OTLP exporter)
 - [x] Terraform modules for CloudWatch Log Groups and CloudTrail audit trail
 - [x] Frontend `.env.example` for Cognito configuration

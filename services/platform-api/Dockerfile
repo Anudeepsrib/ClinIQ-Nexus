@@ -1,10 +1,10 @@
-# syntax=docker/dockerfile:1
+﻿# syntax=docker/dockerfile:1
 FROM python:3.11-slim AS base
 
 # Enterprise hardening labels
-LABEL org.opencontainers.image.title="ClinIQ-Nexus Platform API" \
+LABEL org.opencontainers.image.title="careOS Platform API" \
       org.opencontainers.image.description="Enterprise hardened, HIPAA-aware clinical AI platform API" \
-      org.opencontainers.image.source="https://github.com/example/ClinIQ-Nexus" \
+      org.opencontainers.image.source="https://github.com/example/careOS" \
       security.non-root="true"
 
 ENV PYTHONDONTWRITEBYTECODE=1 \

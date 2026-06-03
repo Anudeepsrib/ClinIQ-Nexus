@@ -1,4 +1,4 @@
-"""Standalone FastAPI application for governed Hindsight Memory."""
+﻿"""Standalone FastAPI application for governed Hindsight Memory."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ from fastapi import FastAPI
 from app.api.routes import router
 
 app = FastAPI(
-    title="MediCore Hindsight Memory Service",
+    title="careOS Hindsight Memory Service",
     version="0.1.0",
     description="Governed long-term memory for non-clinical workflow continuity.",
 )

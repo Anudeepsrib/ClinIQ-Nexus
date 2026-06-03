@@ -1,10 +1,10 @@
-# MediCore AI Platform
+﻿# careOS
 
 **Enterprise-Grade, HIPAA-Compliant AI Platform for Hospitals and Health Systems**
 
-MediCore AI Platform is the governed hospital AI platform implemented in this repository. It can sit under a broader hospital application umbrella alongside existing hospital applications such as ClinIQ, ClinIQ-Nexus, and other healthcare tools. The current local product shell still uses some ClinIQ-Nexus labels while the platform services use the MediCore architecture and governance model.
+careOS is the governed hospital AI platform implemented in this repository. It provides a production-oriented reference implementation for deploying large language models against sensitive patient data while enforcing strict clinical safety, privacy, consent, and governance controls.
 
-This repository is a production-oriented reference implementation of a multi-tenant clinical AI platform. It demonstrates how hospitals can safely deploy large language models against sensitive patient data while enforcing strict clinical safety, privacy, consent, and governance controls.
+The platform is designed as a multi-tenant clinical AI system for hospitals and health systems, with deterministic routing, MCP governance, human review, and auditability built into the core workflow.
 
 > **Critical Clinical Safety Rule**: This system **never** diagnoses, prescribes, or makes final clinical decisions. It summarizes, retrieves, flags risk signals, drafts for review, and always requires human oversight for safety-sensitive outputs.
 
@@ -20,7 +20,7 @@ This repository is a production-oriented reference implementation of a multi-ten
 
 ```bash
 git clone <this-repo>
-cd ClinIQ-Nexus
+cd careOS
 cp .env.example .env
 docker compose up --build
 ```
@@ -74,7 +74,7 @@ flowchart TB
         UI[Next.js Frontend<br/>Role-aware Chat + Review Queue]
     end
 
-    subgraph Platform["MediCore Platform API (FastAPI)"]
+    subgraph Platform["careOS Platform API (FastAPI)"]
         direction TB
         Auth[Auth + RBAC/ABAC Middleware]
         Router[Deterministic Intent Router<br/>+ Safety Lexicon]
@@ -122,8 +122,6 @@ flowchart TB
 
 ## Canonical Use Cases (All Implemented)
 
-## Canonical Use Cases (All Implemented)
-
 1. Patient lab summary (simple_rag)
 2. Chest pain safety triage (clinical_safety_triage → agentic)
 3. 72-hour clinician chart summary
@@ -137,7 +135,7 @@ All routes demonstrate correct governance, citations, disclaimers, and human rev
 ## Repository Structure
 
 ```
-ClinIQ-Nexus/
+careOS/
 ├── apps/web/                    # Next.js 15 + TypeScript frontend
 ├── services/platform-api/       # Primary FastAPI application (all logical services)
 ├── services/ingestion-worker/   # Document processing service
@@ -163,7 +161,7 @@ Enterprise hardening pass applied (CI security, middleware timeouts/size/tenant,
 
 **Deep technical guides:**
 - [Deep Agents & Hindsight Memory Integration](docs/deep-agents-and-hindsight-memory.html) — Architecture + code-level explanation with interactive diagrams.
-- [LinkedIn / Marketing Visual Deck](docs/MediCore_AI_Platform_LinkedIn.html) — Self-contained, beautiful single-file HTML with 4 production-accurate Mermaid block diagrams. Perfect for screenshots, carousels, or sharing the full visual story.
+- [LinkedIn / Marketing Visual Deck](docs/careOS_LinkedIn.html) — Self-contained, beautiful single-file HTML with 4 production-accurate Mermaid block diagrams. Perfect for screenshots, carousels, or sharing the full visual story.
 
 ## License & Compliance Notice
 

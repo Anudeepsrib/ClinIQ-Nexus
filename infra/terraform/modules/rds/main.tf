@@ -1,4 +1,4 @@
-variable "project_name" {
+﻿variable "project_name" {
   type = string
 }
 
@@ -20,12 +20,12 @@ variable "kms_key_arn" {
 
 variable "db_name" {
   type    = string
-  default = "cliniq_nexus"
+  default = "careos"
 }
 
 variable "db_username" {
   type    = string
-  default = "medicoreadmin"
+  default = "careosadmin"
 }
 
 variable "db_password" {

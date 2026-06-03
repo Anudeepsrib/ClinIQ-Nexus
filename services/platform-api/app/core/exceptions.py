@@ -1,4 +1,4 @@
-"""Domain exceptions with safe client responses."""
+﻿"""Domain exceptions with safe client responses."""
 
 from __future__ import annotations
 
@@ -8,7 +8,7 @@ from fastapi import Request
 from fastapi.responses import JSONResponse
 
 
-class ClinIQException(Exception):
+class CareOSException(Exception):
     """Base exception for all controlled errors."""
     status_code: int = 400
     error_code: str = "bad_request"
@@ -19,39 +19,39 @@ class ClinIQException(Exception):
         super().__init__(message)
 
 
-class UnauthorizedError(ClinIQException):
+class UnauthorizedError(CareOSException):
     status_code = 401
     error_code = "unauthorized"
 
 
-class ForbiddenError(ClinIQException):
+class ForbiddenError(CareOSException):
     status_code = 403
     error_code = "forbidden"
 
 
-class NotFoundError(ClinIQException):
+class NotFoundError(CareOSException):
     status_code = 404
     error_code = "not_found"
 
 
-class RateLimitExceeded(ClinIQException):
+class RateLimitExceeded(CareOSException):
     status_code = 429
     error_code = "rate_limited"
 
 
-class SafetyViolationError(ClinIQException):
+class SafetyViolationError(CareOSException):
     """Raised when a clinical safety rule is violated."""
     status_code = 422
     error_code = "safety_violation"
 
 
-class MCPBlockedError(ClinIQException):
+class MCPBlockedError(CareOSException):
     """Context governance blocked the request."""
     status_code = 422
     error_code = "mcp_blocked"
 
 
-def handle_cliniq_exception(request: Request, exc: ClinIQException) -> JSONResponse:
+def handle_careos_exception(request: Request, exc: CareOSException) -> JSONResponse:
     correlation_id = getattr(request.state, "correlation_id", None)
     return JSONResponse(
         status_code=exc.status_code,

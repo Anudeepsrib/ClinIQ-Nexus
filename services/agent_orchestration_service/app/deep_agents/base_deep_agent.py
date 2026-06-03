@@ -1,8 +1,8 @@
-"""
-BaseDeepAgent - Foundation for all LangChain Deep Agents in MediCore.
+﻿"""
+BaseDeepAgent - Foundation for all LangChain Deep Agents in careOS.
 
 This implements the core Deep Agent pattern (Planner + Executor + Critic style)
-while enforcing MediCore's strict governance requirements:
+while enforcing careOS's strict governance requirements:
 - All LLM calls go through MCP first
 - Only scoped tools are available
 - Tenant + role isolation is enforced
@@ -59,7 +59,7 @@ class DeepAgentOutput:
 
 class BaseDeepAgent(ABC):
     """
-    Abstract base for all MediCore Deep Agents.
+    Abstract base for all careOS Deep Agents.
     Every Deep Agent must:
     - Declare its allowed tools (least privilege)
     - Declare required MCP context types

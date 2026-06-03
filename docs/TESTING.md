@@ -1,4 +1,4 @@
-# ClinIQ-Nexus Testing Strategy
+﻿# careOS Testing Strategy
 
 ## Philosophy
 

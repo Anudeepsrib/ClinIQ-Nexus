@@ -1,4 +1,4 @@
-'use client';
+﻿'use client';
 
 import { Stethoscope, Shield, LogOut } from 'lucide-react';
 import { useAuth } from '@/app/hooks/useAuth';
@@ -11,7 +11,7 @@ export function TopNav() {
       <div className="flex items-center gap-3">
         <Stethoscope className="w-6 h-6 text-[#0284c8]" aria-hidden />
         <div>
-          <div className="font-semibold text-xl tracking-tight">MediCore AI</div>
+          <div className="font-semibold text-xl tracking-tight">careOS</div>
           <div className="text-[10px] text-slate-500 -mt-1">HIPAA-GRADE CLINICAL AI • ENTERPRISE PLATFORM</div>
         </div>
         <div 
@@ -29,7 +29,7 @@ export function TopNav() {
         <button 
           onClick={auth.logout}
           className="flex items-center gap-1 text-xs text-slate-400 hover:text-white transition px-3 py-1.5 rounded hover:bg-slate-800 focus:outline-none"
-          aria-label="Sign out of MediCore AI"
+          aria-label="Sign out of careOS"
         >
           <LogOut className="w-3.5 h-3.5" />
           <span>Sign out</span>

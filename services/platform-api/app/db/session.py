@@ -1,4 +1,4 @@
-"""Async SQLAlchemy engine and session."""
+﻿"""Async SQLAlchemy engine and session."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ engine = create_async_engine(
     pool_size=settings.DB_POOL_SIZE,
     max_overflow=settings.DB_MAX_OVERFLOW,
     pool_recycle=1800,  # recycle connections every 30min
-    connect_args={"server_settings": {"application_name": "cliniq_platform_api"}},
+    connect_args={"server_settings": {"application_name": "careos_platform_api"}},
 )
 
 async_session = async_sessionmaker(engine, expire_on_commit=False)

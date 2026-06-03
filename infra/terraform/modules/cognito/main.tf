@@ -1,4 +1,4 @@
-resource "aws_cognito_user_pool" "pool" {
+﻿resource "aws_cognito_user_pool" "pool" {
   name = "${var.project_name}-${var.environment}-pool"
 
   mfa_configuration          = var.environment == "prod" ? "ON" : "OPTIONAL"
@@ -6,7 +6,7 @@ resource "aws_cognito_user_pool" "pool" {
   username_attributes        = ["email"]
   deletion_protection        = var.environment == "prod" ? "ACTIVE" : "INACTIVE"
   user_pool_tier             = "ESSENTIALS"
-  email_verification_subject = "Verify your MediCore AI account"
+  email_verification_subject = "Verify your careOS account"
   email_verification_message = "Your verification code is {####}."
 
   software_token_mfa_configuration {

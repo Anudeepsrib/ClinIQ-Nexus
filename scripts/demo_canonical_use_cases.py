@@ -1,5 +1,5 @@
-"""
-ClinIQ-Nexus Canonical Use Case Demo Script
+﻿"""
+careOS Canonical Use Case Demo Script
 
 This script demonstrates all 7 core use cases from the original specification
 using the real governed backend.
@@ -75,7 +75,7 @@ async def get_token(client: httpx.AsyncClient, email: str) -> str:
 
 
 async def run_demo():
-    console.print(Panel.fit("[bold cyan]ClinIQ-Nexus Canonical Use Case Demo[/bold cyan]"))
+    console.print(Panel.fit("[bold cyan]careOS Canonical Use Case Demo[/bold cyan]"))
     console.print("This demonstrates the full governed architecture.\n")
 
     async with httpx.AsyncClient(base_url="http://localhost:8000", timeout=30.0) as client:

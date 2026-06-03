@@ -1,10 +1,10 @@
-import type { Metadata } from "next";
+﻿import type { Metadata } from "next";
 import "./globals.css";
 import { QueryClientProvider } from "./providers";
 import { ErrorBoundary } from "../components/ErrorBoundary";
 
 export const metadata: Metadata = {
-  title: "MediCore AI | Enterprise Clinical Intelligence Platform",
+  title: "careOS | Enterprise Clinical Intelligence Platform",
   description: "HIPAA-conscious, multi-tenant clinical AI platform. All clinical outputs require licensed human review.",
   icons: {
     icon: "/favicon.ico",
